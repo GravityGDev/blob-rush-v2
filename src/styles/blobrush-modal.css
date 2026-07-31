@@ -7,6 +7,7 @@
 .close-btn { width:clamp(36px,6vh,44px); height:clamp(36px,6vh,44px); flex:0 0 auto; border:0; border-radius:50%; background:rgba(255,255,255,.10); color:#fff; font-size:22px; cursor:pointer; }
 
 .skins-layout { display:grid; grid-template-columns:minmax(310px,40%) minmax(0,1fr); gap:clamp(12px,2vw,22px); align-items:start; }
+.skins-layout > .skin-preview-panel { position:sticky; top:0; align-self:start; max-height:100%; }
 .skin-preview-panel { display:grid; gap:clamp(10px,2vh,18px); align-content:start; padding:clamp(12px,2vw,20px); border-radius:22px; background:linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.08); }
 .skin-preview-stage { position:relative; min-height:clamp(220px,42vh,340px); overflow:hidden; border-radius:20px; display:grid; place-items:center; background:radial-gradient(circle at 50% 35%, rgba(96,165,250,.12), rgba(8,15,35,.6)); border:1px solid rgba(255,255,255,.06); }
 .skin-preview-canvas { display:block; width:min(100%,320px); height:auto; aspect-ratio:1; border-radius:18px; }
