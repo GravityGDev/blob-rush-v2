@@ -1,14 +1,53 @@
-const GAME_URL = 'https://media.base44.com/files/public/6a6bd9617f65c58d9eca35f3/f02428707_BlobRush-Admin-Layout-Performance-Fix-Playtest-1.html';
+import { useState } from 'react';
+import MainMenuScreen from '@/components/menu/MainMenuScreen';
+import GameScreen from '@/components/game/GameScreen';
+import { loadProfile, saveProfile, addXp, xpForLevel } from '@/game/save';
 
 export default function Play() {
-  return (
-    <div className="fixed inset-0 overflow-hidden bg-slate-950">
-      <iframe
-        src={GAME_URL}
-        title="Blob Rush"
-        className="h-full w-full border-0"
-        allow="autoplay; fullscreen; gamepad"
+  const [profile, setProfile] = useState(() => loadProfile());
+  const [playing, setPlaying] = useState(false);
+
+  const update = (patch) => {
+    const next = { ...profile, ...patch };
+    setProfile(next);
+    saveProfile(next);
+  };
+
+  const handleMatchEnd = (result) => {
+    const coins = Math.max(10, Math.round(result.maxMass / 40));
+    const xp = Math.max(15, Math.round(result.maxMass / 25 + result.kills * 20));
+    const next = {
+      ...profile,
+      coins: profile.coins + coins,
+      stats: {
+        ...profile.stats,
+        games: profile.stats.games + 1,
+        highestMass: Math.max(profile.stats.highestMass, Math.round(result.maxMass)),
+        timePlayed: Math.round(profile.stats.timePlayed + result.time),
+        cellsEaten: profile.stats.cellsEaten + result.kills,
+      },
+    };
+    const { levelsGained, tokensGained } = addXp(next, xp);
+    setProfile(next);
+    saveProfile(next);
+    return { ...result, coins, xp, tokens: tokensGained, levelsGained };
+  };
+
+  if (playing) {
+    return (
+      <GameScreen
+        profile={profile}
+        onExit={() => setPlaying(false)}
+        onMatchEnd={handleMatchEnd}
       />
-    </div>
+    );
+  }
+
+  return (
+    <MainMenuScreen
+      profile={{ ...profile, xpPercent: (profile.xp / xpForLevel(profile.level)) * 100 }}
+      onNickname={(nickname) => update({ nickname })}
+      onPlay={() => setPlaying(true)}
+    />
   );
 }

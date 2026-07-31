@@ -74,15 +74,21 @@ export function createSession(canvas, profile, onStats) {
     pointer.y = (touch ? touch.clientY : e.clientY) - rect.top;
     pointer.active = true;
   };
+  function doSplit(times = 1) {
+    let did = false;
+    for (let i = 0; i < times; i++) if (splitPlayer(player)) did = true;
+    if (did) playSfx('split');
+  }
+  function doFeed() {
+    if (ejectMassBurst(world, player, 1)) playSfx('eject');
+  }
+
   const onKey = (e) => {
     if (!player.cells.length) return;
-    if (e.code === 'Space') {
-      e.preventDefault();
-      if (splitPlayer(player)) playSfx('split');
-    } else if (e.code === 'KeyW') {
-      e.preventDefault();
-      if (ejectMassBurst(world, player, 1)) playSfx('eject');
-    }
+    if (e.code === 'Space') { e.preventDefault(); doSplit(1); }
+    else if (e.code === 'KeyQ') { e.preventDefault(); doSplit(2); }
+    else if (e.code === 'KeyR') { e.preventDefault(); doSplit(4); }
+    else if (e.code === 'KeyE' || e.code === 'KeyW') { e.preventDefault(); doFeed(); }
   };
 
   window.addEventListener('mousemove', onMove);
@@ -123,6 +129,7 @@ export function createSession(canvas, profile, onStats) {
         alive: player.cells.length > 0,
         playerPos: player.cells[0] ? { x: player.cells[0].x, y: player.cells[0].y } : null,
         blobs: board.length,
+        fps: Math.round(1 / Math.max(0.0001, dt)),
       });
     }
 
@@ -143,7 +150,7 @@ export function createSession(canvas, profile, onStats) {
       state.world = null;
       state.camera = null;
     },
-    split() { if (splitPlayer(player)) playSfx('split'); },
-    eject() { if (ejectMassBurst(world, player, 1)) playSfx('eject'); },
+    split(times = 1) { doSplit(times); },
+    eject() { doFeed(); },
   };
 }
