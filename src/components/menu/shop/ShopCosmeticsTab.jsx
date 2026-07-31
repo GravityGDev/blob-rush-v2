@@ -22,7 +22,7 @@ export default function ShopCosmeticsTab({ profile, category, onBuy, onEquip }) 
             </div>
             <div className="cosmetic-shop-preview">
               <span className="shop-pack-label">Live preview</span>
-              <SkinPreviewCanvas profile={{ ...profile, equippedCosmetics: {}, cosmeticPreview: { id: item.id } }} skinId={profile.skin} />
+              <SkinPreviewCanvas compact hideCell profile={{ ...profile, equippedCosmetics: {}, cosmeticPreview: { id: item.id } }} skinId={profile.skin} />
             </div>
             <div className="shop-card-bottom">
               <span className="shop-price">{owned ? 'Adjustable in Skins' : `🪙 ${item.price}`}</span>

@@ -16,7 +16,7 @@ export default function ShopPacksTab({ profile, onBuyPack }) {
             </div>
             <div className="shop-pack-preview">
               <span className="shop-pack-label">Live preview</span>
-              <SkinPreviewCanvas profile={profile} skinId={previewSkin.id} />
+              <SkinPreviewCanvas compact profile={profile} skinId={previewSkin.id} />
             </div>
             <div className="shop-pack-swatches">
               {pack.skinIds.slice(0, 6).map((id) => {

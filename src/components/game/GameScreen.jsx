@@ -85,7 +85,7 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
         )}
 
         {touch.layout.hudGroup.visible && (
-          <nav id="hudTopActions" className="hud-top-actions" style={{ ...controlStyle(touch, 'hudGroup', 224, 50), width: 'auto', height: btnSize, gap: `${Math.round(8 * groupScale)}px` }}>
+          <nav id="hudTopActions" className="hud-top-actions" style={{ ...controlStyle(touch, 'hudGroup', (settings.showRecordButton === false ? 3 : 4) * 50 + (settings.showRecordButton === false ? 2 : 3) * 8, 50), height: btnSize, gap: `${Math.round(8 * groupScale)}px` }}>
             <button className={`hud-square-btn${boardOpen ? ' active' : ''}`} style={{ width: btnSize, height: btnSize, fontSize: Math.round(22 * groupScale) }}
               onPointerDown={(e) => { e.preventDefault(); setBoardOpen((v) => !v); playSfx('button'); }}>♛</button>
             {settings.showRecordButton !== false && (

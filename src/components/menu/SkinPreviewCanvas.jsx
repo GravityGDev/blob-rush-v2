@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { drawCell } from '@/game/render/cell';
+import { drawCellCosmetics } from '@/game/render/cosmetics';
 import { radiusFromMass } from '@/game/constants';
 import { getSkin } from '@/game/skins';
 
 // Live in-game cell preview used inside the Skins modal.
-export default function SkinPreviewCanvas({ profile, skinId }) {
+export default function SkinPreviewCanvas({ profile, skinId, compact = false, hideCell = false }) {
+  const modeRef = useRef({ compact, hideCell });
+  modeRef.current = { compact, hideCell };
   const ref = useRef(null);
   const dataRef = useRef({ profile, skinId });
   dataRef.current = { profile, skinId };
@@ -32,10 +35,20 @@ export default function SkinPreviewCanvas({ profile, skinId }) {
       cell.my = skin.reactive ? Math.cos(t * 1.7) * 130 : 0;
 
       const radius = radiusFromMass(500);
-      const scale = Math.min(rect.width / (radius * 2.65), rect.height / (radius * 3.35));
+      const { compact: cmp, hideCell: hide } = modeRef.current;
+      const scale = cmp
+        ? Math.min(rect.width / (radius * 3.2), rect.height / (radius * 3.2))
+        : Math.min(rect.width / (radius * 2.65), rect.height / (radius * 3.35));
       ctx.save();
-      ctx.translate(rect.width * 0.5, rect.height * 0.6);
+      ctx.translate(rect.width * 0.5, rect.height * (cmp ? 0.5 : 0.6));
       ctx.scale(scale, scale);
+      if (hide) {
+        const cosmeticProfile = { equippedCosmetics: p.equippedCosmetics, cosmeticTransforms: p.cosmeticTransforms, cosmeticPreview: p.cosmeticPreview };
+        drawCellCosmetics(ctx, cosmeticProfile, { x: 0, y: 0 }, radius, t, 'back');
+        drawCellCosmetics(ctx, cosmeticProfile, { x: 0, y: 0 }, radius, t, 'front');
+        ctx.restore();
+        return;
+      }
       drawCell(ctx, {
         id: -88,
         name: p.nickname || 'Blob',

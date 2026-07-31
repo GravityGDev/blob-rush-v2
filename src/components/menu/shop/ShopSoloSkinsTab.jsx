@@ -14,7 +14,7 @@ export default function ShopSoloSkinsTab({ profile, onBuySkin }) {
             </div>
             <div className="shop-pack-preview">
               <span className="shop-pack-label">Live preview</span>
-              <SkinPreviewCanvas profile={profile} skinId={skin.id} />
+              <SkinPreviewCanvas compact profile={profile} skinId={skin.id} />
             </div>
             <div className="shop-feature-pills">
               <span className="shop-feature-pill">{skin.rarity || 'Premium'}</span>
