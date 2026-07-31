@@ -47,6 +47,7 @@ export function createSession(canvas, profile, onStats) {
   let fpsFrames = 0;
   let fpsAccum = 0;
   let fps = 60;
+  let smoothFps = 60;
 
   const settings = () => state.profile?.settings || profile.settings || {};
 
@@ -152,12 +153,16 @@ export function createSession(canvas, profile, onStats) {
     }
 
     const visual = settings();
+    // Adaptive detail: drop particle/pellet budgets when the frame rate sags.
+    const frameFps = dt > 0 ? 1 / dt : 60;
+    smoothFps += (frameFps - smoothFps) * Math.min(1, dt * 3);
+    const detail = Math.max(0.35, Math.min(1, (smoothFps - 22) / 34));
     ctx.setTransform(state.size.dpr, 0, 0, state.size.dpr, 0, 0);
     render(ctx, state.size.w, state.size.h, world, cam, {
-      quality: visual.quality || 'high',
-      detail: 1,
+      quality: smoothFps < 34 ? 'low' : (visual.quality || 'high'),
+      detail,
       showCosmetics: visual.showCosmetics !== false,
-      showGlows: visual.showGlows !== false,
+      showGlows: visual.showGlows !== false && smoothFps > 30,
       animateSkins: visual.animateSkins !== false,
     });
 

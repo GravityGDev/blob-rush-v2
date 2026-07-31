@@ -394,7 +394,14 @@ function handleEating(world, sfx, sharedEjectedIndex = null) {
   for (const p of world.players) for (const c of p.cells) entries.push([p, c]);
   entries.sort((x, y) => y[1].mass - x[1].mass);
 
-  const pelletIndex = buildSpatialIndex(world.pellets);
+  // Pellets barely move, so their spatial index is refreshed every few frames
+  // instead of rebuilt from 3000+ items on every single frame.
+  world.pelletIndexAge = (world.pelletIndexAge || 0) + 1;
+  if (!world.pelletIndex || world.pelletIndexAge >= 4) {
+    world.pelletIndex = buildSpatialIndex(world.pellets);
+    world.pelletIndexAge = 0;
+  }
+  const pelletIndex = world.pelletIndex;
   const ejectedIndex = sharedEjectedIndex || buildSpatialIndex(world.ejected);
   const virusIndex = buildSpatialIndex(world.viruses);
 
