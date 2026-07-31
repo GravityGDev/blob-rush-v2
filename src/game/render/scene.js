@@ -177,12 +177,12 @@ export function render(ctx, w, h, world, cam, opts) {
   // Fixed 1280x720 screen-space render budget. Convert it to world units
   // using the dynamic mass/formation scale before manual zoom is applied.
   const cullScale = Math.max(0.035, Math.min(1.2, Number(cam.renderScale || cam.scale || 0.2)));
-  // Never render wider than what is actually on screen (plus a small margin);
-  // the fixed budget only acts as an upper bound.
-  const screenHalfW = (w / 2) / cam.scale + 90 / cam.scale;
-  const screenHalfH = (h / 2) / cam.scale + 90 / cam.scale;
-  const renderHalfW = Math.min((FIXED_RENDER_WIDTH * 0.5) / cullScale, screenHalfW);
-  const renderHalfH = Math.min((FIXED_RENDER_HEIGHT * 0.5) / cullScale, screenHalfH);
+  // Manual zoom-out never increases what is simulated on screen: the render
+  // area is the tighter of the natural camera view and the current view, and
+  // is additionally capped by the fixed 1280x720 budget.
+  const budgetScale = Math.max(cam.scale, cullScale);
+  const renderHalfW = Math.min(FIXED_RENDER_WIDTH * 0.5, w / 2 + 90) / budgetScale;
+  const renderHalfH = Math.min(FIXED_RENDER_HEIGHT * 0.5, h / 2 + 90) / budgetScale;
   const renderView = {
     l: cam.x - renderHalfW,
     r: cam.x + renderHalfW,
