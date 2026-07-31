@@ -39,7 +39,7 @@ export const DEFAULTS = {
   rewardsVersion: 1,
   tokens: 0,
   seasonPass: { season: 1, points: 0, vip: false, claimedFree: [], claimedVip: [] },
-  luckyStats: { wheelSpins: 0, slotSpins: 0, jackpots: 0 },
+  luckyStats: { wheelSpins: 0, slotSpins: 0, cardFlips: 0, jackpots: 0 },
   ownedSkins: [...FREE_SKIN_IDS],
   purchasedPacks: [],
   purchasedSkins: [],

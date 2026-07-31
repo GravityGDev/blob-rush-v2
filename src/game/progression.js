@@ -28,15 +28,24 @@ export const SEASON_TIERS = Array.from({ length: 12 }, (_, i) => ({
   vipTokens: [2,2,3,2,3,3,3,4,4,5,5,8][i],
 }));
 export const WHEEL_REWARDS = [
-  { label:'100 Coins', short:'100', type:'coins', amount:100, color:'#0ea5e9' },
-  { label:'1h XP Boost', short:'XP 1h', type:'boost', boost:'xp', hours:1, color:'#8b5cf6' },
-  { label:'250 Coins', short:'250', type:'coins', amount:250, color:'#22c55e' },
-  { label:'1h Mass Boost', short:'Mass 1h', type:'boost', boost:'mass', hours:1, color:'#f97316' },
-  { label:'500 Coins', short:'500', type:'coins', amount:500, color:'#ec4899' },
-  { label:'Random Cosmetic', short:'Cosmetic', type:'cosmetic', color:'#14b8a6' },
-  { label:'150 Coins', short:'150', type:'coins', amount:150, color:'#eab308' },
-  { label:'1000 Coin Jackpot', short:'1000', type:'coins', amount:1000, color:'#ef4444' },
+  { label:'100 Coins', short:'100 🪙', icon:'🪙', type:'coins', amount:100, weight:20, color:'#0ea5e9' },
+  { label:'1h XP Boost', short:'1h XP', icon:'⚡', type:'boost', boost:'xp', hours:1, weight:13, color:'#8b5cf6' },
+  { label:'250 Coins', short:'250 🪙', icon:'🪙', type:'coins', amount:250, weight:14, color:'#22c55e' },
+  { label:'1h Mass Boost', short:'1h Mass', icon:'💪', type:'boost', boost:'mass', hours:1, weight:13, color:'#f97316' },
+  { label:'500 Coins', short:'500 🪙', icon:'💰', type:'coins', amount:500, weight:8, color:'#ec4899' },
+  { label:'Random Cosmetic', short:'Cosmetic', icon:'🎩', type:'cosmetic', weight:7, color:'#14b8a6' },
+  { label:'150 Coins', short:'150 🪙', icon:'🪙', type:'coins', amount:150, weight:19, color:'#eab308' },
+  { label:'1000 Jackpot', short:'1000 💥', icon:'💎', type:'coins', amount:1000, weight:6, color:'#ef4444' },
 ];
+export const WHEEL_TOTAL_WEIGHT = WHEEL_REWARDS.reduce((sum, r) => sum + r.weight, 0);
+export function pickWheelIndex() {
+  let roll = Math.random() * WHEEL_TOTAL_WEIGHT;
+  for (let i = 0; i < WHEEL_REWARDS.length; i += 1) {
+    roll -= WHEEL_REWARDS[i].weight;
+    if (roll <= 0) return i;
+  }
+  return WHEEL_REWARDS.length - 1;
+}
 export const SLOT_SYMBOLS = ['🪙','⭐','🟢','💎','7️⃣'];
 
 export function seasonUnlockedTier(profileNow) {
