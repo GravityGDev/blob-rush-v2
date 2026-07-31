@@ -11,7 +11,11 @@ import DeathPanel from './DeathPanel';
 import TouchControls from './TouchControls';
 import EmojiWheel from './EmojiWheel';
 import ModMenu from './ModMenu';
+import NetStatus from './NetStatus';
 import { playSfx, setSfxVolume } from '@/game/audio';
+import { createNetHolder } from '@/game/net/holder';
+import { startOnlineSession } from '@/game/net/online';
+import { isOnlineEnabled } from '@/game/net/config';
 
 const EMPTY = { mass: 0, kills: 0, rank: 0, leaderboard: [], selfRank: 0, selfName: '', playerPos: null, fps: 60, ping: 20, bandwidth: 1, alive: true };
 
@@ -26,10 +30,19 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   const [modOpen, setModOpen] = useState(false);
   const [wheelOpen, setWheelOpen] = useState(false);
   const [toast, setToast] = useState('');
+  const [netStatus, setNetStatus] = useState(null);
+  const netRef = useRef(null);
 
   useEffect(() => {
     state.stats = { maxMass: 0, lastMass: 0, bestRank: 99 };
     startedAt.current = Date.now();
+    const net = createNetHolder();
+    netRef.current = net;
+    if (isOnlineEnabled(profile)) {
+      startOnlineSession(profile, setNetStatus)
+        .then((client) => { if (client) net.client = client; })
+        .catch(() => setNetStatus({ state: 'error' }));
+    }
     const session = createSession(canvasRef.current, profile, (next) => {
       setStats(next);
       if (!next.alive && !sessionRef.current?.ended) {
@@ -42,9 +55,9 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
           time: (Date.now() - startedAt.current) / 1000,
         }));
       }
-    });
+    }, net);
     sessionRef.current = session;
-    return () => session.destroy();
+    return () => { session.destroy(); net.close(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -106,6 +119,7 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
       <HudLeaderboard rows={stats.leaderboard} selfRank={stats.selfRank} selfName={stats.selfName} open={boardOpen} />
       {settings.showMiniMap !== false && <HudMiniMap playerPos={stats.playerPos} />}
       <div className={`hud-toast${toast ? ' show' : ''}`}>{toast}</div>
+      <NetStatus status={netStatus} />
 
       {wheelOpen && (
         <EmojiWheel profile={profile} onEmoji={(id) => s?.playEmoji(id)} onEmote={(id) => s?.playEmote(id)} onClose={() => setWheelOpen(false)} />

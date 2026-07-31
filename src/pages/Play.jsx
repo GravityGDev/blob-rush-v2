@@ -95,7 +95,7 @@ export default function Play() {
       {modal === 'season' && <SeasonPassModal profile={profile} onProfile={commit} onClose={close} />}
       {modal === 'lucky' && <LuckyModal profile={profile} onProfile={commit} onClose={close} />}
       {modal === 'settings' && <SettingsModal profile={profile} onChange={(settings) => update({ settings })} onClose={close} />}
-      {modal === 'server' && <ServerModal profile={profile} onSelect={(room2) => update({ room: room2 })} onClose={close} />}
+      {modal === 'server' && <ServerModal profile={profile} onSelect={(room2) => update({ room: room2 })} onSettings={(settings) => update({ settings })} onClose={close} />}
       {modal === 'admin' && <AdminModal profile={profile} onProfile={commit} onClose={close} />}
       {modal === 'moderation' && (
         <StaffModal mode={modal} profile={profile} onProfile={commit} onClose={close} />

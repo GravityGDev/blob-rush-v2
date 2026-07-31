@@ -9,7 +9,10 @@ import { state } from './state';
 import { START_MASS, MAX_CELLS } from './constants';
 import { boosterActive } from './progression';
 
-export function createSession(canvas, profile, onStats) {
+// `net` is an optional authoritative server connection. When present the server
+// owns the simulation and this loop only sends intent and renders snapshots.
+export function createSession(canvas, profile, onStats, net = null) {
+  const online = () => !!net?.connected;
   const ctx = canvas.getContext('2d', { alpha: false });
   const world = createWorld(profile.nickname || 'Blob', profile.skin, {
     startMass: boosterActive(profile, 'mass') ? Math.round(START_MASS * 1.25) : START_MASS,
@@ -63,7 +66,9 @@ export function createSession(canvas, profile, onStats) {
   resize();
 
   function doSplit() {
-    if (!dead && player.cells.length && splitPlayer(player)) playSfx('split');
+    if (dead || !player.cells.length) return;
+    if (online()) { net.split(1); playSfx('split'); return; }
+    if (splitPlayer(player)) playSfx('split');
   }
   const animationDelayMs = () => Math.max(50, Math.min(500, Number(settings().animationDelay || 150)));
 
@@ -82,6 +87,12 @@ export function createSession(canvas, profile, onStats) {
   }
 
   function doFeed(withSound = true, pulses = 1) {
+    if (online()) {
+      if (dead || !player.cells.length) return false;
+      net.feed(pulses);
+      if (withSound) playSfx('eject');
+      return true;
+    }
     const did = !!(!dead && player.cells.length && ejectMassBurst(world, player, pulses));
     if (did && withSound) playSfx('eject');
     return did;
@@ -148,7 +159,12 @@ export function createSession(canvas, profile, onStats) {
       player.dir = input;
       if (input.mag > 0.15) player.lastDir = { x: input.x, y: input.y };
       processMassStream(dt);
-      updateWorld(world, dt * Math.max(0.15, Number(world.modTimeScale || 1)), playSfx);
+      if (online()) {
+        net.sendInput(input);
+        net.sync.apply(world, player);
+      } else {
+        updateWorld(world, dt * Math.max(0.15, Number(world.modTimeScale || 1)), playSfx);
+      }
       updateCamera(cam, player, dt, state.size.w, state.size.h);
     }
 
@@ -207,8 +223,8 @@ export function createSession(canvas, profile, onStats) {
         selfName: player.name,
         alive: player.cells.length > 0,
         playerPos: player.cells[0] ? { x: player.cells[0].x, y: player.cells[0].y } : null,
-        ping: Math.round(20 + Math.sin(now / 1300) * 3 + Math.random() * 2),
-        bandwidth: Math.max(1, Math.round(1 + entities * 0.055)),
+        ping: online() ? net.ping : Math.round(20 + Math.sin(now / 1300) * 3 + Math.random() * 2),
+        bandwidth: online() ? Math.max(1, net.bandwidth) : Math.max(1, Math.round(1 + entities * 0.055)),
         fps,
       });
     }
@@ -264,8 +280,8 @@ export function createSession(canvas, profile, onStats) {
         doFeed(false, 1);
       }, 110);
     },
-    playEmoji(id) { player.activeEmoji = { id, until: world.time + 2.3 }; },
-    playEmote(id) { player.activeEmote = { id, startedAt: world.time }; },
+    playEmoji(id) { player.activeEmoji = { id, until: world.time + 2.3 }; if (online()) net.emoji(id); },
+    playEmote(id) { player.activeEmote = { id, startedAt: world.time }; if (online()) net.emote(id); },
     reviveIfMassGiven() { if (player.cells.length) dead = false; },
   };
 }

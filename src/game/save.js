@@ -57,7 +57,7 @@ export const DEFAULTS = {
   customSkins: [],
   room: { modeId: 'ffa', roomId: 'ffa-8080' },
   stats: { games: 0, highestMass: 0, timePlayed: 0, wins: 0, cellsEaten: 0 },
-  settings: { sfx: 0.8, music: 0.5, joystick: 1, quality: 'high', macroSpeed: 50, macroMultiplier: 4, cameraZoom: 100, animationDelay: 150, fixedCameraZoom: false, showFps:true, showReticle:true, showStatsBar:true, showMiniMap:true, showRecordButton:true, showCosmetics:true, showGlows:true, animateSkins:true, touch:DEFAULT_TOUCH_SETTINGS },
+  settings: { serverUrl: '', onlineEnabled: false, sfx: 0.8, music: 0.5, joystick: 1, quality: 'high', macroSpeed: 50, macroMultiplier: 4, cameraZoom: 100, animationDelay: 150, fixedCameraZoom: false, showFps:true, showReticle:true, showStatsBar:true, showMiniMap:true, showRecordButton:true, showCosmetics:true, showGlows:true, animateSkins:true, touch:DEFAULT_TOUCH_SETTINGS },
 };
 
 let memoryProfile = null;
