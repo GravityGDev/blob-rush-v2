@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import ModalShell from './ModalShell';
 import '@/styles/blobrush-shop.css';
-import ShopMainTab from './shop/ShopMainTab';
 import ShopSoloSkinsTab from './shop/ShopSoloSkinsTab';
 import ShopBoostersTab from './shop/ShopBoostersTab';
 import ShopCosmeticsTab from './shop/ShopCosmeticsTab';
@@ -13,7 +12,6 @@ import {
 } from '@/game/shop';
 
 const TABS = [
-  { id: 'main', label: 'Main' },
   { id: 'skins', label: 'Animated Skins' },
   { id: 'boosters', label: 'Boosters' },
   { id: 'cosmetics', label: 'Cosmetics' },
@@ -36,7 +34,7 @@ const SOCIAL_CATS = [
 ];
 
 export default function ShopModal({ profile, onProfile, onClose }) {
-  const [tab, setTab] = useState('main');
+  const [tab, setTab] = useState('skins');
   const [cosmeticCat, setCosmeticCat] = useState('all');
   const [socialCat, setSocialCat] = useState('all');
   const [note, setNote] = useState('');
@@ -78,14 +76,6 @@ export default function ShopModal({ profile, onProfile, onClose }) {
         {tab === 'social' && !note ? 'Purchased reactions can be starred. Favourites always appear first in the in-game wheel.' : note}
       </div>
 
-      {tab === 'main' && (
-        <ShopMainTab
-          profile={profile}
-          onBuySkin={(id) => run(buySingleSkin(profile, id))}
-          onBuyCosmetic={(id) => run(buyCosmetic(profile, id))}
-          onOpenTab={setTab}
-        />
-      )}
       {tab === 'skins' && <ShopSoloSkinsTab profile={profile} onBuySkin={(id) => run(buySingleSkin(profile, id))} />}
       {tab === 'boosters' && <ShopBoostersTab profile={profile} onBuyBooster={(id, hours) => run(buyBooster(profile, id, hours))} />}
       {tab === 'cosmetics' && (
