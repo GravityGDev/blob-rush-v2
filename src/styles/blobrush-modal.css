@@ -39,6 +39,46 @@
 .skin-locked-badge { position:absolute; bottom:7px; left:50%; transform:translateX(-50%); padding:4px 8px; border-radius:999px; background:rgba(15,23,42,.88); border:1px solid rgba(255,255,255,.16); color:#f8fafc; font-size:9px; font-weight:1000; white-space:nowrap; }
 .skin-empty-state { grid-column:1/-1; display:grid; place-items:center; min-height:160px; padding:22px; border:1px dashed rgba(255,255,255,.14); border-radius:18px; color:rgba(255,255,255,.5); text-align:center; font-size:13px; }
 
+.skin-card small { color:rgba(255,255,255,.5); font-size:clamp(9px,1.35vw,12px); text-align:center; }
+.skin-card small.animated { color:#7dd3fc; font-weight:900; }
+.skin-card small.reactive { color:#f9a8d4; font-weight:900; }
+
+/* Cosmetics + badges panels (verbatim from the original build) */
+.cosmetics-editor { display:grid; gap:13px; }
+.cosmetics-empty { padding:28px; border-radius:17px; border:1px dashed rgba(255,255,255,.16); color:rgba(255,255,255,.56); text-align:center; }
+.cosmetics-owned-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.cosmetic-card { position:relative; min-height:110px; display:grid; justify-items:center; align-content:center; gap:7px; padding:12px 8px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); color:#fff; cursor:pointer; }
+.cosmetic-card.active { border-color:#38bdf8; background:rgba(56,189,248,.1); }
+.cosmetic-card.equipped::after { content:'Equipped'; position:absolute; bottom:6px; left:50%; transform:translateX(-50%); padding:3px 7px; border-radius:999px; background:#0284c7; font-size:8px; font-weight:1000; }
+.cosmetic-icon { font-size:31px; line-height:1; }
+.cosmetic-name { font-size:11px; font-weight:900; text-align:center; }
+.cosmetic-slot-note { color:rgba(255,255,255,.48); font-size:10px; line-height:1.4; }
+.badges-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.badge-card { position:relative; min-height:138px; display:grid; justify-items:center; align-content:center; gap:9px; padding:16px 12px; border:1px solid rgba(255,255,255,.09); border-radius:18px; background:linear-gradient(155deg,rgba(255,255,255,.065),rgba(255,255,255,.025)); color:#fff; cursor:pointer; overflow:hidden; }
+.badge-card::before { content:''; position:absolute; inset:-45%; background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.1),transparent 25%); animation:badgeCardSweep 5s linear infinite; pointer-events:none; }
+.badge-card:hover,.badge-card.active { transform:translateY(-1px); border-color:rgba(125,211,252,.62); box-shadow:0 12px 30px rgba(14,165,233,.15); }
+.badge-card.active { background:linear-gradient(155deg,rgba(14,165,233,.16),rgba(99,102,241,.08)); }
+.badge-card.active::after { content:'Equipped'; position:absolute; right:8px; top:8px; padding:4px 8px; border-radius:999px; background:#0284c7; font-size:8px; font-weight:1000; }
+.badge-card.none-card::before { display:none; }
+.badge-preview-icon { position:relative; width:62px; height:62px; display:grid; place-items:center; filter:drop-shadow(0 8px 15px rgba(0,0,0,.35)); font-size:30px; }
+.badge-preview-icon svg { width:100%; height:100%; overflow:visible; }
+.badge-card-name { position:relative; font-size:14px; font-weight:1000; }
+.badge-card-note { position:relative; color:rgba(255,255,255,.5); font-size:10px; text-align:center; line-height:1.35; }
+.badge-exclusive-note { grid-column:1/-1; padding:11px 13px; border-radius:14px; border:1px solid rgba(250,204,21,.18); background:rgba(250,204,21,.065); color:#fde68a; font-size:11px; line-height:1.45; }
+@keyframes badgeCardSweep { to { transform:rotate(360deg); } }
+@media (max-height:560px) and (orientation:landscape) {
+  .cosmetics-owned-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+  .cosmetic-card { min-height:78px; padding:7px 5px 20px; }
+  .cosmetic-icon { font-size:22px; }
+  .cosmetic-name { font-size:9px; }
+  .badges-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .badge-card { min-height:105px; padding:10px 8px; gap:5px; }
+  .badge-preview-icon { width:44px; height:44px; }
+  .badge-card-name { font-size:11px; }
+  .badge-card-note,.badge-exclusive-note { font-size:8px; }
+}
+@media (max-width:900px) { .cosmetics-owned-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+
 .profile-layout { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.38fr); gap:clamp(12px,2vw,20px); align-items:start; }
 .profile-head { display:flex; gap:clamp(12px,2vw,18px); align-items:center; padding:clamp(12px,2vw,18px); border-radius:20px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); }
 .profile-head h3 { margin:0 0 3px; font-size:clamp(24px,4vw,34px); }

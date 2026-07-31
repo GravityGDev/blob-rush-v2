@@ -67,7 +67,7 @@ export default function Play() {
         onPlay={() => setPlaying(true)}
         onOpenModal={setModal}
       />
-      {modal === 'skins' && <SkinsModal profile={profile} onEquip={(skin) => update({ skin })} onClose={close} />}
+      {modal === 'skins' && <SkinsModal profile={profile} onEquip={(skin) => update({ skin })} onProfile={commit} onClose={close} />}
       {modal === 'profile' && <ProfileModal profile={profile} onClose={close} />}
       {modal === 'shop' && <ShopModal profile={profile} onProfile={commit} onClose={close} />}
       {modal === 'season' && <SeasonPassModal profile={profile} onProfile={commit} onClose={close} />}
