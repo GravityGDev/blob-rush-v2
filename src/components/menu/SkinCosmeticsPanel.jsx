@@ -1,11 +1,13 @@
-import { useState } from 'react';
 import '@/styles/blobrush-cosmetic.css';
 import { SHOP_COSMETICS } from '@/game/skins';
-import CosmeticEditor from './CosmeticEditor';
 
-// Owned-cosmetics editor from the original skins menu (hat + overlay slots).
+const SECTIONS = [
+  { slot: 'hat', title: 'Hats', note: 'Equip one hat cosmetic above your cell.' },
+  { slot: 'overlay', title: 'Overlays', note: 'Equip one overlay effect on your cell.' },
+];
+
+// Owned-cosmetics grid from the original skins menu (hat + overlay slots).
 export default function SkinCosmeticsPanel({ profile, onProfile }) {
-  const [editing, setEditing] = useState(null);
   const owned = SHOP_COSMETICS.filter((item) => (profile.ownedCosmetics || []).includes(item.id));
 
   const toggle = (item) => {
@@ -15,34 +17,33 @@ export default function SkinCosmeticsPanel({ profile, onProfile }) {
   };
 
   if (!owned.length) {
-    return (
-      <div className="cosmetics-editor">
-        <div className="cosmetics-empty">You do not own any cosmetics yet. Buy hats and overlays in the Shop.</div>
-      </div>
-    );
+    return <div className="cos-empty">You do not own any cosmetics yet. Buy hats and overlays in the Shop.</div>;
   }
 
   return (
     <div className="cosmetics-editor">
-      <div className="cosmetics-owned-grid">
-        {owned.map((item) => {
-          const equipped = profile.equippedCosmetics?.[item.slot] === item.id;
-          return (
-            <div key={item.id} className="cosmetic-card-row">
-              <button type="button" className={`cosmetic-card${equipped ? ' active equipped' : ''}`} style={{ flex: 1 }} onClick={() => toggle(item)}>
-                <span className="cosmetic-icon">{item.icon}</span>
-                <span className="cosmetic-name">{item.name}</span>
-              </button>
-              <button type="button" className="cosmetic-adjust-btn" onClick={() => setEditing(item.id)}>Adjust</button>
+      {SECTIONS.map((sec) => {
+        const list = owned.filter((i) => i.slot === sec.slot);
+        if (!list.length) return null;
+        return (
+          <div key={sec.slot} className="cos-section">
+            <h3>{sec.title}</h3>
+            <p>{sec.note}</p>
+            <div className="cos-card-grid">
+              {list.map((item) => {
+                const equipped = profile.equippedCosmetics?.[item.slot] === item.id;
+                return (
+                  <button key={item.id} type="button" className={`cos-card${equipped ? ' selected' : ''}`} onClick={() => toggle(item)}>
+                    <span className="cos-card-icon">{item.icon}</span>
+                    <span className="cos-card-name">{item.name}</span>
+                    {equipped && <span className="cos-card-badge">Equipped</span>}
+                  </button>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
-      <div className="cosmetic-slot-note">One hat, one overlay and one badge can be equipped together. Tap an owned cosmetic to equip it, or Adjust to open the fullscreen editor.</div>
-
-      {editing && (
-        <CosmeticEditor profile={profile} cosmeticId={editing} onProfile={onProfile} onClose={() => setEditing(null)} />
-      )}
+          </div>
+        );
+      })}
     </div>
   );
 }

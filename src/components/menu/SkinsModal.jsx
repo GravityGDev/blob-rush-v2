@@ -5,6 +5,7 @@ import { getAvailableSkins, getSkin } from '@/game/skins';
 import { rarityColor, skinBackground, skinPreviewClass, getSkinCategory, isSkinOwned, filterSkins, categoryIntro } from '@/game/skinUi';
 import SkinCosmeticsPanel from './SkinCosmeticsPanel';
 import SkinBadgesPanel from './SkinBadgesPanel';
+import CosmeticEditor from './CosmeticEditor';
 
 const FILTERS = [
   { id: 'owned', label: 'Owned' },
@@ -19,6 +20,7 @@ const FILTERS = [
 export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
   const [filter, setFilter] = useState('owned');
   const [previewId, setPreviewId] = useState(profile.skin);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const isCosmetics = filter === 'cosmetics';
   const isBadges = filter === 'badges';
@@ -45,6 +47,9 @@ export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
             {preview.reactive && <span className="skin-preview-pill">Reactive movement FX</span>}
           </div>
         </div>
+        {isCosmetics && (
+          <button className="cos-edit-fullscreen" onClick={() => setEditorOpen(true)}>⛶ Edit Cosmetics Full Screen</button>
+        )}
         <button className="skin-equip-btn" hidden={isCosmetics || isBadges} disabled={equipped || !owned} onClick={() => onEquip(preview.id)}>
           {equipped ? 'Equipped' : owned ? 'Equip' : 'Locked'}
         </button>
@@ -86,6 +91,10 @@ export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
           ))}
         </div>
       </section>
+
+      {editorOpen && (
+        <CosmeticEditor profile={profile} onProfile={onProfile} onClose={() => setEditorOpen(false)} />
+      )}
     </ModalShell>
   );
 }
