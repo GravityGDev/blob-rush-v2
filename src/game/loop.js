@@ -2,7 +2,7 @@
 // Input + macro behaviour is a 1:1 port of the original HTML build.
 import { createWorld } from './world';
 import { createCamera, updateCamera } from './camera';
-import { updateWorld, splitPlayer, ejectMassBurst } from './physics';
+import { updateWorld, splitPlayer, ejectMassBurst, cursorWorldTarget } from './physics';
 import { render } from './render/scene';
 import { playSfx, setSfxVolume } from './audio';
 import { state } from './state';
@@ -159,6 +159,26 @@ export function createSession(canvas, profile, onStats) {
       showGlows: visual.showGlows !== false,
       animateSkins: visual.animateSkins !== false,
     });
+
+    if (visual.showReticle !== false && !dead && player.cells.length) {
+      const t = cursorWorldTarget(player);
+      const sx = (t.x - cam.x) * cam.scale + state.size.w / 2;
+      const sy = (t.y - cam.y) * cam.scale + state.size.h / 2;
+      const dpr = state.size.dpr;
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.globalAlpha = 0.75;
+      ctx.strokeStyle = 'rgba(255,255,255,.85)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 11, 0, Math.PI * 2);
+      ctx.moveTo(sx - 18, sy); ctx.lineTo(sx - 5, sy);
+      ctx.moveTo(sx + 5, sy); ctx.lineTo(sx + 18, sy);
+      ctx.moveTo(sx, sy - 18); ctx.lineTo(sx, sy - 5);
+      ctx.moveTo(sx, sy + 5); ctx.lineTo(sx, sy + 18);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     fpsFrames += 1;
     fpsAccum += dt;
