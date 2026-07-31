@@ -1,4 +1,6 @@
+import '@/styles/blobrush-cosmetic.css';
 import { SHOP_COSMETICS, getCosmeticShopCategory } from '@/game/skins';
+import SkinPreviewCanvas from '../SkinPreviewCanvas';
 
 // Cosmetic shop cards, matching the original build's card layout.
 export default function ShopCosmeticsTab({ profile, category, onBuy, onEquip }) {
@@ -17,6 +19,10 @@ export default function ShopCosmeticsTab({ profile, category, onBuy, onEquip }) 
                 <div><h3>{item.name}</h3><p>{item.slot === 'hat' ? 'Hat slot' : 'Overlay slot'} · {getCosmeticShopCategory(item)}</p></div>
               </div>
               {owned && <span className="shop-owned-chip">Owned</span>}
+            </div>
+            <div className="cosmetic-shop-preview">
+              <span className="shop-pack-label">Live preview</span>
+              <SkinPreviewCanvas profile={{ ...profile, cosmeticPreview: { id: item.id } }} skinId={profile.skin} />
             </div>
             <div className="shop-card-bottom">
               <span className="shop-price">{owned ? 'Adjustable in Skins' : `🪙 ${item.price}`}</span>

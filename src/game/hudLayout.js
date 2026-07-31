@@ -48,6 +48,14 @@ export function getTouchSettings(profile) {
   };
 }
 
+// Global HUD scale so controls keep their proportions on any screen size.
+export function uiScale() {
+  if (typeof window === 'undefined') return 1;
+  const w = window.innerWidth || 1024;
+  const h = window.innerHeight || 640;
+  return clamp(Math.min(w / 1024, h / 430), 0.62, 1.15);
+}
+
 export function touchActualPoint(item, touch) {
   return { ...item, x: touch.invertButtons ? 1 - item.x : item.x };
 }
@@ -55,14 +63,15 @@ export function touchActualPoint(item, touch) {
 // Absolute px style for a control placed inside the fixed touch layer.
 export function controlStyle(touch, key, baseW, baseH = baseW) {
   const point = touchActualPoint(touch.layout[key], touch);
+  const s = uiScale();
   return {
     position: 'absolute',
     left: `${point.x * 100}%`,
     top: `${point.y * 100}%`,
-    width: `${baseW * point.size}px`,
-    height: `${baseH * point.size}px`,
+    width: `${baseW * point.size * s}px`,
+    height: `${baseH * point.size * s}px`,
     transform: 'translate(-50%,-50%)',
   };
 }
 
-export const joystickRadius = (touch) => 56 * touch.joystickSize * touch.layout.joystick.size;
+export const joystickRadius = (touch) => 56 * touch.joystickSize * touch.layout.joystick.size * uiScale();

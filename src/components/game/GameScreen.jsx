@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import '@/styles/blobrush-game.css';
 import { createSession } from '@/game/loop';
 import { state } from '@/game/state';
-import { getTouchSettings, controlStyle, touchActualPoint } from '@/game/hudLayout';
+import { getTouchSettings, controlStyle, touchActualPoint, uiScale } from '@/game/hudLayout';
+import useViewport from '@/hooks/use-viewport';
 import HudStatsBar from './HudStatsBar';
 import HudMiniMap from './HudMiniMap';
 import HudLeaderboard from './HudLeaderboard';
@@ -55,13 +56,16 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
 
   useEffect(() => { state.profile = profile; setSfxVolume(profile.settings.sfx); }, [profile]);
 
+  const viewport = useViewport();
   const s = sessionRef.current;
   const settings = profile.settings;
   const touch = getTouchSettings(profile);
   const setSettings = (next) => onProfile({ ...profile, settings: next });
   const hudLeft = touchActualPoint(touch.layout.hudGroup, touch).x < 0.5;
-  const groupScale = touch.layout.hudGroup.size;
-  const statsWidth = Math.min(760, Math.max(560, window.innerWidth * 0.48));
+  const scale = uiScale();
+  const groupScale = touch.layout.hudGroup.size * scale;
+  const btnSize = Math.round(50 * groupScale);
+  const statsWidth = Math.min(760, Math.max(300, viewport.w * 0.52)) / Math.max(0.5, touch.layout.stats.size * scale);
 
   const showToast = (text) => { setToast(text); setTimeout(() => setToast(''), 1700); };
 
@@ -81,16 +85,16 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
         )}
 
         {touch.layout.hudGroup.visible && (
-          <nav id="hudTopActions" className="hud-top-actions" style={{ ...controlStyle(touch, 'hudGroup', 224, 50 * groupScale), width: 'auto', gap: `${8 * groupScale}px` }}>
-            <button className={`hud-square-btn${boardOpen ? ' active' : ''}`} style={{ width: 50 * groupScale, height: 50 * groupScale, fontSize: 22 * groupScale }}
+          <nav id="hudTopActions" className="hud-top-actions" style={{ ...controlStyle(touch, 'hudGroup', 224, 50), width: 'auto', height: btnSize, gap: `${Math.round(8 * groupScale)}px` }}>
+            <button className={`hud-square-btn${boardOpen ? ' active' : ''}`} style={{ width: btnSize, height: btnSize, fontSize: Math.round(22 * groupScale) }}
               onPointerDown={(e) => { e.preventDefault(); setBoardOpen((v) => !v); playSfx('button'); }}>♛</button>
             {settings.showRecordButton !== false && (
-              <button className="hud-square-btn record" style={{ width: 50 * groupScale, height: 50 * groupScale, fontSize: 22 * groupScale }}
+              <button className="hud-square-btn record" style={{ width: btnSize, height: btnSize, fontSize: Math.round(22 * groupScale) }}
                 onPointerDown={(e) => { e.preventDefault(); showToast('Recording button is ready — capture functionality will be added later.'); playSfx('button'); }}>🎬</button>
             )}
-            <button className={`hud-square-btn${modOpen ? ' active' : ''}`} style={{ width: 50 * groupScale, height: 50 * groupScale, fontSize: 22 * groupScale }}
+            <button className={`hud-square-btn${modOpen ? ' active' : ''}`} style={{ width: btnSize, height: btnSize, fontSize: Math.round(22 * groupScale) }}
               onPointerDown={(e) => { e.preventDefault(); setModOpen((v) => !v); playSfx('button'); }}>⚙</button>
-            <button className="hud-square-btn" style={{ width: 50 * groupScale, height: 50 * groupScale, fontSize: 22 * groupScale }}
+            <button className="hud-square-btn" style={{ width: btnSize, height: btnSize, fontSize: Math.round(22 * groupScale) }}
               onPointerDown={(e) => { e.preventDefault(); setPaused(true); s?.setPaused(true); }}>Ⅱ</button>
           </nav>
         )}

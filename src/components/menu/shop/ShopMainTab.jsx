@@ -47,7 +47,7 @@ export default function ShopMainTab({ profile, onBuyPack, onBuyCosmetic, onBuySk
         </div>
         <div className="shop-pack-preview">
           <span className="shop-pack-label">Newest cosmetic</span>
-          <SkinPreviewCanvas profile={profile} skinId={profile.skin} />
+          <SkinPreviewCanvas profile={{ ...profile, cosmeticPreview: { id: newestCosmetic.id } }} skinId={profile.skin} />
         </div>
         <div className="shop-card-bottom">
           <span className="shop-price">🪙 {newestCosmetic.price}</span>

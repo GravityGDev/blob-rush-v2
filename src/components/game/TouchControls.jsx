@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { getTouchSettings, controlStyle, touchActualPoint, joystickRadius } from '@/game/hudLayout';
+import { getTouchSettings, controlStyle, touchActualPoint, joystickRadius, uiScale } from '@/game/hudLayout';
+import useViewport from '@/hooks/use-viewport';
 
 // Full-screen joystick layer + the split / feed / emoji buttons, positioned
 // exactly like the original build's touch control layer.
@@ -7,6 +8,7 @@ export default function TouchControls({ profile, session, onEmoji }) {
   const layerRef = useRef(null);
   const baseRef = useRef(null);
   const knobRef = useRef(null);
+  useViewport();
   const touch = getTouchSettings(profile);
   const touchRef = useRef(touch);
   touchRef.current = touch;
@@ -99,8 +101,10 @@ export default function TouchControls({ profile, session, onEmoji }) {
     layer.addEventListener('pointermove', onMove);
     layer.addEventListener('pointerup', onUp);
     layer.addEventListener('pointercancel', onUp);
+    window.addEventListener('resize', showIdle);
     showIdle();
     return () => {
+      window.removeEventListener('resize', showIdle);
       layer.removeEventListener('pointerdown', onDown);
       layer.removeEventListener('pointermove', onMove);
       layer.removeEventListener('pointerup', onUp);
@@ -109,8 +113,11 @@ export default function TouchControls({ profile, session, onEmoji }) {
   }, [session]);
 
   const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
+  const scale = uiScale();
   const btn = (key, base, cls, label, handlers) => touch.layout[key].visible && touch.showButtons && (
-    <button key={key} className={`round-btn ${cls}`} style={controlStyle(touch, key, base)} {...handlers}>{label}</button>
+    <button key={key} className={`round-btn ${cls}`}
+      style={{ ...controlStyle(touch, key, base), fontSize: `${Math.max(8, Math.round(base * 0.17 * touch.layout[key].size * scale))}px` }}
+      {...handlers}>{label}</button>
   );
 
   return (
@@ -136,7 +143,7 @@ export default function TouchControls({ profile, session, onEmoji }) {
       })}
 
       {touch.layout.emoji.visible && touch.showButtons && (
-        <button id="emojiHudBtn" style={controlStyle(touch, 'emoji', 54)} onPointerDown={(e) => { stop(e); onEmoji(); }}>😊</button>
+        <button id="emojiHudBtn" style={{ ...controlStyle(touch, 'emoji', 54), fontSize: `${Math.round(26 * touch.layout.emoji.size * scale)}px` }} onPointerDown={(e) => { stop(e); onEmoji(); }}>😊</button>
       )}
     </>
   );

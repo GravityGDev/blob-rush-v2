@@ -1,7 +1,11 @@
+import { useState } from 'react';
+import '@/styles/blobrush-cosmetic.css';
 import { SHOP_COSMETICS } from '@/game/skins';
+import CosmeticEditor from './CosmeticEditor';
 
 // Owned-cosmetics editor from the original skins menu (hat + overlay slots).
 export default function SkinCosmeticsPanel({ profile, onProfile }) {
+  const [editing, setEditing] = useState(null);
   const owned = SHOP_COSMETICS.filter((item) => (profile.ownedCosmetics || []).includes(item.id));
 
   const toggle = (item) => {
@@ -24,14 +28,21 @@ export default function SkinCosmeticsPanel({ profile, onProfile }) {
         {owned.map((item) => {
           const equipped = profile.equippedCosmetics?.[item.slot] === item.id;
           return (
-            <button key={item.id} type="button" className={`cosmetic-card${equipped ? ' active equipped' : ''}`} onClick={() => toggle(item)}>
-              <span className="cosmetic-icon">{item.icon}</span>
-              <span className="cosmetic-name">{item.name}</span>
-            </button>
+            <div key={item.id} className="cosmetic-card-row">
+              <button type="button" className={`cosmetic-card${equipped ? ' active equipped' : ''}`} style={{ flex: 1 }} onClick={() => toggle(item)}>
+                <span className="cosmetic-icon">{item.icon}</span>
+                <span className="cosmetic-name">{item.name}</span>
+              </button>
+              <button type="button" className="cosmetic-adjust-btn" onClick={() => setEditing(item.id)}>Adjust</button>
+            </div>
           );
         })}
       </div>
-      <div className="cosmetic-slot-note">One hat, one overlay and one badge can be equipped together. Tap an owned cosmetic to equip or unequip it.</div>
+      <div className="cosmetic-slot-note">One hat, one overlay and one badge can be equipped together. Tap an owned cosmetic to equip it, or Adjust to open the fullscreen editor.</div>
+
+      {editing && (
+        <CosmeticEditor profile={profile} cosmeticId={editing} onProfile={onProfile} onClose={() => setEditing(null)} />
+      )}
     </div>
   );
 }
