@@ -42,6 +42,7 @@ export default function SkinPreviewCanvas({ profile, skinId }) {
         skin: skin.id,
         isBot: false,
         equippedCosmetics: p.equippedCosmetics,
+        cosmeticPreview: p.cosmeticPreview,
         cosmeticTransforms: p.cosmeticTransforms,
         equippedBadge: p.equippedBadge,
       }, cell, t, { quality: 'high' });
