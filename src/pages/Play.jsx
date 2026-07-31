@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainMenuScreen from '@/components/menu/MainMenuScreen';
 import SkinsModal from '@/components/menu/SkinsModal';
 import ProfileModal from '@/components/menu/ProfileModal';
+import AccountModal from '@/components/menu/AccountModal';
 import ShopModal from '@/components/menu/ShopModal';
 import SeasonPassModal from '@/components/menu/SeasonPassModal';
 import LuckyModal from '@/components/menu/LuckyModal';
@@ -14,13 +15,30 @@ import '@/styles/blobrush-game.css';
 import { loadProfile, saveProfile, addXp, xpForLevel } from '@/game/save';
 import { addSeasonProgress, boosterActive } from '@/game/progression';
 import { findMode, findRoom } from '@/game/rooms';
+import { fetchAccount, queueProfilePush } from '@/game/account';
 
 export default function Play() {
   const [profile, setProfile] = useState(() => loadProfile());
   const [playing, setPlaying] = useState(false);
   const [modal, setModal] = useState(null);
+  const [account, setAccount] = useState(null);
+  const [user, setUser] = useState(null);
 
-  const commit = (next) => { setProfile(next); saveProfile(next); };
+  // Signed-in players load their cloud profile and keep it in sync.
+  useEffect(() => {
+    fetchAccount().then((res) => {
+      if (!res) return;
+      setUser(res.user);
+      setAccount(res.account);
+      if (res.profile) setProfile((local) => ({ ...res.profile, customSkins: local.customSkins }));
+    });
+  }, []);
+
+  const commit = (next) => {
+    setProfile(next);
+    saveProfile(next);
+    queueProfilePush(account?.id, next);
+  };
   const update = (patch) => commit({ ...profile, ...patch });
 
   const handleMatchEnd = (result) => {
@@ -69,6 +87,9 @@ export default function Play() {
       />
       {modal === 'skins' && <SkinsModal profile={profile} onEquip={(skin) => update({ skin })} onProfile={commit} onClose={close} />}
       {modal === 'profile' && <ProfileModal profile={profile} onClose={close} />}
+      {modal === 'account' && (
+        <AccountModal profile={profile} account={account} user={user} onAccount={setAccount} onClose={close} />
+      )}
       {modal === 'shop' && <ShopModal profile={profile} onProfile={commit} onClose={close} />}
       {modal === 'season' && <SeasonPassModal profile={profile} onProfile={commit} onClose={close} />}
       {modal === 'lucky' && <LuckyModal profile={profile} onProfile={commit} onClose={close} />}

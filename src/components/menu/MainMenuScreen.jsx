@@ -17,7 +17,7 @@ export default function MainMenuScreen({ profile, roomLabel, roomMeta, onNicknam
         <main className="menu-shell">
           <header className="topbar">
             <div className="level-wrap">
-              <button type="button" className="level-circle profile-orb-button" onClick={() => open('profile')} aria-label="Open profile">
+              <button type="button" className="level-circle profile-orb-button" onClick={() => open('account')} aria-label="Open account">
                 <span className="profile-orb-level">{profile.level}</span>
               </button>
               <div className="level-info">
