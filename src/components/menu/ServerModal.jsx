@@ -8,7 +8,7 @@ import useServerRooms from '@/hooks/use-server-rooms';
 const modeLabel = (id) => GAME_MODES.find((m) => m.id === id) || { id, name: id, icon: '🎮', description: '' };
 
 export default function ServerModal({ profile, onSelect, onSettings, onClose }) {
-  const { status, rooms } = useServerRooms(profile);
+  const { status, rooms, checkedAt } = useServerRooms(profile);
   const modeIds = [...new Set(rooms.map((r) => r.modeId))];
   const [modeId, setModeId] = useState(profile.room.modeId);
   const activeMode = modeIds.includes(modeId) ? modeId : modeIds[0];
@@ -16,7 +16,13 @@ export default function ServerModal({ profile, onSelect, onSettings, onClose }) 
 
   return (
     <ModalShell title="Choose Arena" onClose={onClose}>
-      <ServerConnectionPanel settings={profile.settings} onSettings={onSettings} />
+      <ServerConnectionPanel
+        settings={profile.settings}
+        onSettings={onSettings}
+        status={status}
+        players={rooms.reduce((s, r) => s + (r.players || 0), 0)}
+        checkedAt={checkedAt}
+      />
 
       {status === 'none' && (
         <div className="shop-note">Add your server address above to see live arenas. Without it, matches run offline against bots.</div>

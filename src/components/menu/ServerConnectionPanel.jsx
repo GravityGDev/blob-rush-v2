@@ -1,10 +1,11 @@
 // Configures the authoritative game server used for online play.
 import { useState } from 'react';
 import { gameServerUrl } from '@/game/net/config';
+import ServerStatusBadge from './ServerStatusBadge';
 import '@/styles/blobrush-net.css';
 
-export default function ServerConnectionPanel({ settings, onSettings }) {
-  const [url, setUrl] = useState(settings.serverUrl || '');
+export default function ServerConnectionPanel({ settings, onSettings, status, players, checkedAt }) {
+  const [url, setUrl] = useState(gameServerUrl({ settings }));
   const online = !!settings.onlineEnabled;
   const resolved = gameServerUrl({ settings: { serverUrl: url } });
 
@@ -12,6 +13,7 @@ export default function ServerConnectionPanel({ settings, onSettings }) {
     <div className="net-panel">
       <div className="net-panel-head">
         <strong>Server connection</strong>
+        <ServerStatusBadge status={status} players={players} checkedAt={checkedAt} />
         <label className="net-toggle">
           <input
             type="checkbox"

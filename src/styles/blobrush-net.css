@@ -10,6 +10,15 @@
 .net-save-btn { padding:9px 16px; border:1px solid rgba(56,189,248,.5); border-radius:11px; background:linear-gradient(180deg,rgba(14,165,233,.95),rgba(2,132,199,.95)); color:#fff; font-size:12px; font-weight:1000; cursor:pointer; }
 .net-panel-note { color:rgba(255,255,255,.5); font-size:11px; line-height:1.45; }
 
+.net-status-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:900; border:1px solid rgba(255,255,255,.14); background:rgba(2,6,23,.55); color:rgba(255,255,255,.7); }
+.net-status-badge em { font-style:normal; opacity:.65; font-weight:700; }
+.net-status-badge .net-status-time { font-family:ui-monospace,monospace; font-size:10px; opacity:.45; }
+.net-status-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+.net-status-badge.up { color:#6ee7b7; border-color:rgba(52,211,153,.4); }
+.net-status-badge.up .net-status-dot { box-shadow:0 0 8px #34d399; animation:netPulse 1.6s ease-in-out infinite; }
+.net-status-badge.down { color:#fca5a5; border-color:rgba(248,113,113,.4); }
+@keyframes netPulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+
 .net-status { position:fixed; left:50%; top:12px; transform:translateX(-50%); z-index:40; padding:7px 14px; border-radius:999px; font-size:12px; font-weight:900; backdrop-filter:blur(6px); pointer-events:none; }
 .net-status.wait { background:rgba(15,23,42,.85); border:1px solid rgba(125,211,252,.35); color:#7dd3fc; }
 .net-status.good { background:rgba(6,78,59,.7); border:1px solid rgba(52,211,153,.4); color:#6ee7b7; }
