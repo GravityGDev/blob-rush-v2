@@ -44,11 +44,12 @@ export default function SkinPreviewCanvas({ profile, skinId, compact = false, hi
 
       const radius = radiusFromMass(500);
       const { compact: cmp, hideCell: hide } = modeRef.current;
+      // Leave enough headroom so hats, halos and auras stay fully inside the card.
       const scale = cmp
-        ? Math.min(rect.width / (radius * 3.2), rect.height / (radius * 3.2))
+        ? Math.min(rect.width / (radius * 4.4), rect.height / (radius * 4.4))
         : Math.min(rect.width / (radius * 2.65), rect.height / (radius * 3.35));
       ctx.save();
-      ctx.translate(rect.width * 0.5, rect.height * (cmp ? 0.5 : 0.6));
+      ctx.translate(rect.width * 0.5, rect.height * (cmp ? 0.56 : 0.6));
       ctx.scale(scale, scale);
       if (hide) {
         const cosmeticProfile = { equippedCosmetics: p.equippedCosmetics, cosmeticTransforms: p.cosmeticTransforms, cosmeticPreview: p.cosmeticPreview };
