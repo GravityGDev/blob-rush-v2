@@ -152,6 +152,7 @@ export function createSession(canvas, profile, onStats) {
     }
 
     const visual = settings();
+    ctx.setTransform(state.size.dpr, 0, 0, state.size.dpr, 0, 0);
     render(ctx, state.size.w, state.size.h, world, cam, {
       quality: visual.quality || 'high',
       detail: 1,
