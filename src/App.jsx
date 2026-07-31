@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import Play from './pages/Play';
+import MenuPreview from './pages/MenuPreview';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -36,6 +37,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Play />} />
+      <Route path="/menu" element={<MenuPreview />} />
       {/* Add your page Route elements here */}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
