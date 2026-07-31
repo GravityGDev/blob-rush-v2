@@ -12,7 +12,7 @@ export const TOUCH_CONTROL_META = {
   split4: { name:'Split ×4', icon:'4×', baseW:58, baseH:58 },
   feed: { name:'Macro Feed', icon:'⚡', baseW:64, baseH:64 },
   normalFeed: { name:'Normal Feed', icon:'●', baseW:62, baseH:62 },
-  stats: { name:'Stats Bar', icon:'📊', baseW:820, baseH:62 },
+  stats: { name:'Stats Bar', icon:'📊', baseW:576, baseH:50 },
   hudGroup: { name:'Top HUD Buttons', icon:'♛ 🎬 ⚙ Ⅱ', baseW:224, baseH:50 },
   emoji: { name:'Emoji / Emote', icon:'😊', baseW:54, baseH:54 },
 };

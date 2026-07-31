@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { playSfx } from '@/game/audio';
-import { DEFAULT_TOUCH_LAYOUT, TOUCH_CONTROL_META, TOUCH_CONTROL_KEYS, clampTouchLayoutItem, clamp } from '@/game/hudLayout';
+import { DEFAULT_TOUCH_LAYOUT, TOUCH_CONTROL_META, TOUCH_CONTROL_KEYS, clampTouchLayoutItem, clamp, uiScale } from '@/game/hudLayout';
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
@@ -148,20 +148,27 @@ export default function TouchLayoutEditor({ touch, onSave }) {
         {TOUCH_CONTROL_KEYS.map((key) => {
           const entry = clampTouchLayoutItem(draft[key], DEFAULT_TOUCH_LAYOUT[key]);
           const m = TOUCH_CONTROL_META[key];
-          const x = touch.invertButtons ? 1 - entry.x : entry.x;
+          // Mirror the in-game sizing (uiScale + joystick size) so the editor matches what is on screen.
+          const px = m.baseW * entry.size * scale * uiScale() * (key === 'joystick' ? touch.joystickSize : 1);
+          const py = m.baseH * entry.size * scale * uiScale() * (key === 'joystick' ? touch.joystickSize : 1);
+          const rawX = touch.invertButtons ? 1 - entry.x : entry.x;
+          const stageW = Math.max(1, stageRef.current?.clientWidth || 1);
+          const stageH = Math.max(1, stageRef.current?.clientHeight || 1);
+          const x = clamp(rawX, Math.min(0.5, (px / 2 + 4) / stageW), Math.max(0.5, 1 - (px / 2 + 4) / stageW));
+          const y = clamp(entry.y, Math.min(0.5, (py / 2 + 4) / stageH), Math.max(0.5, 1 - (py / 2 + 4) / stageH));
           return (
             <div
               key={key}
               data-touch-control={key}
               className={`touch-edit-control ${controlClass[key]}${editing && key === selected ? ' selected' : ''}`}
               style={{
-                left: `${x * 100}%`, top: `${entry.y * 100}%`,
-                width: `${m.baseW * entry.size * scale}px`, height: `${m.baseH * entry.size * scale}px`,
-                fontSize: `${Math.max(6, 12 * entry.size * scale)}px`, opacity: entry.visible ? 1 : 0.3,
+                left: `${x * 100}%`, top: `${y * 100}%`,
+                width: `${px}px`, height: `${py}px`,
+                fontSize: `${Math.max(6, 12 * entry.size * scale * uiScale())}px`, opacity: entry.visible ? 1 : 0.3,
               }}
             >
               {key === 'joystick' && <span className="touch-joystick-base"><i className="touch-joystick-knob" /></span>}
-              {key === 'stats' && <><span>⚖ MASS</span><span>🪙 COINS</span><span>⚡ FPS</span><span>📶 PING</span><span>☄ KILLS</span></>}
+              {key === 'stats' && <><span>⚖ MASS</span><span>🪙 COINS</span><span>⚡ FPS</span><span>📶 PING</span><span>☄ KILLS</span><span>📡 KB/S</span></>}
               {key === 'hudGroup' && <><span>♛</span><span>🎬</span><span>⚙</span><span>Ⅱ</span></>}
               {!['joystick','stats','hudGroup'].includes(key) && <strong>{key === 'split' ? 'SPLIT' : key === 'split2' ? '×2' : key === 'split4' ? '×4' : key === 'feed' ? 'MACRO' : key === 'normalFeed' ? 'FEED' : '😊'}</strong>}
               <i className="touch-resize-handle" data-touch-resize />
