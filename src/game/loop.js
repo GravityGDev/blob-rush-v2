@@ -1,15 +1,16 @@
-// Game session: owns the world, camera, input and the animation frame loop.
-import { createWorld, movePlayerToSafeSpawn } from './world';
+// Game session: world, camera, input and the animation frame loop.
+// Input + macro behaviour is a 1:1 port of the original HTML build.
+import { createWorld } from './world';
 import { createCamera, updateCamera } from './camera';
 import { updateWorld, splitPlayer, ejectMassBurst } from './physics';
 import { render } from './render/scene';
 import { playSfx, setSfxVolume } from './audio';
 import { state } from './state';
-import { START_MASS } from './constants';
+import { START_MASS, MAX_CELLS } from './constants';
 import { boosterActive } from './progression';
 
 export function createSession(canvas, profile, onStats) {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: false });
   const world = createWorld(profile.nickname || 'Blob', profile.skin, {
     startMass: boosterActive(profile, 'mass') ? Math.round(START_MASS * 1.25) : START_MASS,
     equippedCosmetics: profile.equippedCosmetics,
@@ -27,174 +28,225 @@ export function createSession(canvas, profile, onStats) {
   state.camera = cam;
   setSfxVolume(Number(profile.settings?.sfx ?? 0.8));
 
-  const settings = profile.settings || {};
-  const opts = {
-    quality: settings.quality || 'high',
-    detail: 1,
-    showCosmetics: settings.showCosmetics !== false,
-    showGlows: settings.showGlows !== false,
-    animateSkins: settings.animateSkins !== false,
-  };
+  let input = { x: 0, y: 0, mag: 0 };
+  let feedHeld = false;          // macro feed button
+  let normalFeedHeld = false;    // classic feed button
+  let normalFeedTimer = null;
+  let macroAccumulator = 0;
+  let macroSoundCooldown = 0;
+  let multiSplitSequenceId = 0;
+  let keyboardActive = false;
+  const keys = new Set();
 
-  const pointer = { x: 0, y: 0, active: false };
-  let usingJoystick = false;
-  let macroHeld = false;
-  let macroTimer = 0;
+  let paused = false;
+  let dead = false;
   let running = true;
   let raf = 0;
   let last = performance.now();
   let statsTick = 0;
+  let fpsFrames = 0;
+  let fpsAccum = 0;
+  let fps = 60;
+
+  const settings = () => state.profile?.settings || profile.settings || {};
 
   function resize() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = canvas.clientWidth || window.innerWidth;
-    const h = canvas.clientHeight || window.innerHeight;
+    const coarse = window.matchMedia('(pointer:coarse)').matches;
+    const dpr = Math.min(coarse ? 1.35 : 1.75, window.devicePixelRatio || 1);
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     state.size = { w, h, dpr };
   }
   resize();
 
-  function updateDirection() {
-    const { w, h } = state.size;
-    const dx = pointer.x - w / 2;
-    const dy = pointer.y - h / 2;
-    const dist = Math.hypot(dx, dy);
-    if (dist < 12) {
-      player.dir = { x: player.lastDir.x, y: player.lastDir.y, mag: 0 };
+  function doSplit() {
+    if (!dead && player.cells.length && splitPlayer(player)) playSfx('split');
+  }
+  const animationDelayMs = () => Math.max(50, Math.min(500, Number(settings().animationDelay || 150)));
+
+  function doMultiSplit(presses = 2) {
+    if (dead || !player.cells.length) return;
+    const total = Math.max(1, Math.min(4, Math.floor(presses)));
+    const sequenceId = ++multiSplitSequenceId;
+    let completed = 0;
+    const step = () => {
+      if (sequenceId !== multiSplitSequenceId || dead || paused || !player.cells.length) return;
+      doSplit();
+      completed += 1;
+      if (completed < total && player.cells.length < MAX_CELLS) setTimeout(step, animationDelayMs());
+    };
+    step();
+  }
+
+  function doFeed(withSound = true, pulses = 1) {
+    const did = !!(!dead && player.cells.length && ejectMassBurst(world, player, pulses));
+    if (did && withSound) playSfx('eject');
+    return did;
+  }
+
+  function macroRate() {
+    const speed = Math.max(10, Math.min(99, Number(settings().macroSpeed || 50)));
+    const multiplier = Math.max(1, Math.min(300, Number(settings().macroMultiplier || 4)));
+    return Math.min(6000, (1000 / speed) * multiplier);
+  }
+
+  function processMassStream(dt) {
+    macroSoundCooldown = Math.max(0, macroSoundCooldown - dt);
+    if (!feedHeld || paused || dead) {
+      macroAccumulator = Math.min(macroAccumulator, 0.35);
       return;
     }
-    const nx = dx / dist;
-    const ny = dy / dist;
-    player.lastDir = { x: nx, y: ny };
-    player.dir = { x: nx, y: ny, mag: Math.min(1, dist / (Math.min(w, h) * 0.42)) };
+    macroAccumulator += dt * macroRate();
+    const shots = Math.min(100, Math.floor(macroAccumulator));
+    if (shots <= 0) return;
+    macroAccumulator -= shots;
+    const fired = doFeed(false, shots);
+    if (fired && macroSoundCooldown <= 0) {
+      playSfx('eject');
+      macroSoundCooldown = 0.11;
+    }
   }
 
-  const onMove = (e) => {
-    if (usingJoystick) return;
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches?.[0];
-    pointer.x = (touch ? touch.clientX : e.clientX) - rect.left;
-    pointer.y = (touch ? touch.clientY : e.clientY) - rect.top;
-    pointer.active = true;
+  function updateKeyboardInput() {
+    if (!keyboardActive) return;
+    let x = 0, y = 0;
+    if (keys.has('KeyA') || keys.has('ArrowLeft')) x -= 1;
+    if (keys.has('KeyD') || keys.has('ArrowRight')) x += 1;
+    if (keys.has('KeyW') || keys.has('ArrowUp')) y -= 1;
+    if (keys.has('KeyS') || keys.has('ArrowDown')) y += 1;
+    const d = Math.hypot(x, y);
+    input = d ? { x: x / d, y: y / d, mag: 1 } : { ...input, mag: 0 };
+  }
+
+  const onKeyDown = (e) => {
+    if (['Space','KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+    keyboardActive = true;
+    keys.add(e.code);
+    if (e.code === 'Space') doSplit();
+    if (e.code === 'KeyQ') doMultiSplit(2);
+    if (e.code === 'KeyR') doMultiSplit(4);
+    if (e.code === 'KeyE') doFeed();
   };
-  function doSplit(times = 1) {
-    let did = false;
-    for (let i = 0; i < times; i++) if (splitPlayer(player)) did = true;
-    if (did) playSfx('split');
-  }
-  function doFeed() {
-    if (ejectMassBurst(world, player, 1)) playSfx('eject');
-  }
+  const onKeyUp = (e) => keys.delete(e.code);
 
-  const onKey = (e) => {
-    if (!player.cells.length) return;
-    if (e.code === 'Space') { e.preventDefault(); doSplit(1); }
-    else if (e.code === 'KeyQ') { e.preventDefault(); doSplit(2); }
-    else if (e.code === 'KeyR') { e.preventDefault(); doSplit(4); }
-    else if (e.code === 'KeyE' || e.code === 'KeyW') { e.preventDefault(); doFeed(); }
-  };
-
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('touchmove', onMove, { passive: true });
-  window.addEventListener('touchstart', onMove, { passive: true });
-  window.addEventListener('keydown', onKey);
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
   window.addEventListener('resize', resize);
 
   function frame(now) {
     if (!running) return;
-    const dt = Math.min(0.05, (now - last) / 1000);
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
     last = now;
 
-    if (pointer.active && !usingJoystick) updateDirection();
+    updateKeyboardInput();
 
-    if (macroHeld && player.cells.length) {
-      macroTimer += dt * 1000;
-      const speed = Math.max(10, Math.min(99, Number(profile.settings?.macroSpeed ?? 50)));
-      const multi = Math.max(1, Math.min(300, Number(profile.settings?.macroMultiplier ?? 4)));
-      while (macroTimer >= speed) {
-        macroTimer -= speed;
-        if (ejectMassBurst(world, player, multi)) playSfx('eject');
-      }
-    } else macroTimer = 0;
+    if (!paused && !dead) {
+      player.dir = input;
+      if (input.mag > 0.15) player.lastDir = { x: input.x, y: input.y };
+      processMassStream(dt);
+      updateWorld(world, dt * Math.max(0.15, Number(world.modTimeScale || 1)), playSfx);
+      updateCamera(cam, player, dt, state.size.w, state.size.h);
+    }
 
-    updateWorld(world, dt, playSfx);
-    updateCamera(cam, player, dt, state.size.w, state.size.h);
-    render(ctx, state.size.w, state.size.h, world, cam, opts);
+    const visual = settings();
+    render(ctx, state.size.w, state.size.h, world, cam, {
+      quality: visual.quality || 'high',
+      detail: 1,
+      showCosmetics: visual.showCosmetics !== false,
+      showGlows: visual.showGlows !== false,
+      animateSkins: visual.animateSkins !== false,
+    });
+
+    fpsFrames += 1;
+    fpsAccum += dt;
+    if (fpsAccum >= 1) { fps = Math.round(fpsFrames / fpsAccum); fpsFrames = 0; fpsAccum = 0; }
 
     const mass = player.cells.reduce((sum, c) => sum + c.mass, 0);
     state.stats.lastMass = mass;
     state.stats.maxMass = Math.max(state.stats.maxMass, mass);
 
     statsTick += dt;
-    if (statsTick > 0.25) {
+    if (statsTick > 0.2) {
       statsTick = 0;
       const board = world.players
-        .map((p) => ({ id: p.id, name: p.name, mass: p.cells.reduce((s, c) => s + c.mass, 0), isPlayer: p === player }))
-        .filter((entry) => entry.mass > 0)
-        .sort((a, b) => b.mass - a.mass);
+        .map((p) => ({ id: p.id, name: p.name, kills: p.kills || 0, mass: Math.round(p.cells.reduce((s, c) => s + c.mass, 0)), isPlayer: p === player }))
+        .sort((a, b) => (b.kills - a.kills) || (b.mass - a.mass) || (a.id - b.id));
       const rank = board.findIndex((entry) => entry.isPlayer) + 1;
       if (rank > 0) state.stats.bestRank = Math.min(state.stats.bestRank, rank);
+      const entities = world.players.reduce((s, pl) => s + (pl.cells?.length || 0), 0) + world.ejected.length + world.viruses.length;
+      if (!player.cells.length) dead = true;
       onStats({
         mass: Math.round(mass),
         cells: player.cells.length,
         kills: player.kills || 0,
-        rank: rank || board.length + 1,
-        leaderboard: board.slice(0, 10),
+        rank: rank || board.length,
+        leaderboard: board.slice(0, 5),
+        selfRank: rank,
+        selfName: player.name,
         alive: player.cells.length > 0,
         playerPos: player.cells[0] ? { x: player.cells[0].x, y: player.cells[0].y } : null,
-        blobs: board.length,
-        fps: Math.round(1 / Math.max(0.0001, dt)),
+        ping: Math.round(20 + Math.sin(now / 1300) * 3 + Math.random() * 2),
+        bandwidth: Math.max(1, Math.round(1 + entities * 0.055)),
+        fps,
       });
     }
-
-    raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
 
   return {
     world,
+    camera: cam,
     destroy() {
       running = false;
       cancelAnimationFrame(raf);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('touchmove', onMove);
-      window.removeEventListener('touchstart', onMove);
-      window.removeEventListener('keydown', onKey);
+      clearInterval(normalFeedTimer);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('resize', resize);
       state.world = null;
       state.camera = null;
     },
-    split(times = 1) { doSplit(times); },
-    eject() { doFeed(); },
-    setMacro(on) { macroHeld = !!on; if (!on) macroTimer = 0; },
-    setJoystick(dir) {
-      if (!dir) {
-        usingJoystick = false;
-        if (profile.settings?.touch?.stopOnRelease !== false) player.dir = { x: player.lastDir.x, y: player.lastDir.y, mag: 0 };
-        return;
+    setPaused(value) {
+      paused = !!value;
+      if (paused) {
+        feedHeld = false;
+        normalFeedHeld = false;
+        macroAccumulator = 0;
+        clearInterval(normalFeedTimer);
+        normalFeedTimer = null;
+        multiSplitSequenceId += 1;
       }
-      usingJoystick = true;
-      const sens = Math.max(0.4, Math.min(2, Number(profile.settings?.touch?.joystickSensitivity ?? 1)));
-      if (dir.mag > 0.02) player.lastDir = { x: dir.x, y: dir.y };
-      player.dir = { x: dir.x, y: dir.y, mag: Math.max(0, Math.min(1, dir.mag * sens)) };
+    },
+    setInput(next) {
+      keyboardActive = false;
+      input = next;
+    },
+    stopInput(stopOnRelease) {
+      if (!keyboardActive && stopOnRelease) input = { ...input, mag: 0 };
+    },
+    split(times = 1) { if (times > 1) doMultiSplit(times); else doSplit(); },
+    feed() { doFeed(); },
+    setMacro(on) {
+      feedHeld = !!on;
+      macroAccumulator = 0;
+      if (on) doFeed();
+    },
+    setNormalFeed(on) {
+      normalFeedHeld = !!on;
+      clearInterval(normalFeedTimer);
+      normalFeedTimer = null;
+      if (!on) return;
+      doFeed();
+      normalFeedTimer = setInterval(() => {
+        if (!normalFeedHeld || paused || dead) return;
+        doFeed(false, 1);
+      }, 110);
     },
     playEmoji(id) { player.activeEmoji = { id, until: world.time + 2.3 }; },
     playEmote(id) { player.activeEmote = { id, startedAt: world.time }; },
-    admin(action, value) {
-      const cells = player.cells;
-      if (action === 'setMass' && cells.length) { const each = Math.max(20, value / cells.length); cells.forEach((c) => { c.mass = each; }); }
-      else if (action === 'addMass') cells.forEach((c) => { c.mass += value; });
-      else if (action === 'god') player.modGodMode = !!value;
-      else if (action === 'invisible') player.modInvisible = !!value;
-      else if (action === 'speed') player.modSpeedMultiplier = value;
-      else if (action === 'freezeBots') world.botsFrozen = !!value;
-      else if (action === 'viruses') world.virusSpawningEnabled = !!value;
-      else if (action === 'pellets') world.pelletSpawningEnabled = !!value;
-      else if (action === 'timeScale') world.modTimeScale = value;
-      else if (action === 'killBots') world.players.forEach((p) => { if (p.isBot) p.cells = []; });
-      else if (action === 'respawnSafe') movePlayerToSafeSpawn(world, player);
-    },
+    reviveIfMassGiven() { if (player.cells.length) dead = false; },
   };
 }

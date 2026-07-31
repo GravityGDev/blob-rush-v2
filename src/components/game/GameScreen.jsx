@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import '@/styles/blobrush-game.css';
 import { createSession } from '@/game/loop';
 import { state } from '@/game/state';
-import { hudStyle } from '@/game/hudLayout';
+import { getTouchSettings, controlStyle, touchActualPoint } from '@/game/hudLayout';
 import HudStatsBar from './HudStatsBar';
 import HudMiniMap from './HudMiniMap';
 import HudLeaderboard from './HudLeaderboard';
@@ -10,9 +10,9 @@ import DeathPanel from './DeathPanel';
 import TouchControls from './TouchControls';
 import EmojiWheel from './EmojiWheel';
 import ModMenu from './ModMenu';
-import LayoutEditor from './LayoutEditor';
+import { playSfx, setSfxVolume } from '@/game/audio';
 
-const EMPTY = { mass: 0, kills: 0, rank: 0, leaderboard: [], playerPos: null, fps: 60, alive: true };
+const EMPTY = { mass: 0, kills: 0, rank: 0, leaderboard: [], selfRank: 0, selfName: '', playerPos: null, fps: 60, ping: 20, bandwidth: 1, alive: true };
 
 export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   const canvasRef = useRef(null);
@@ -24,7 +24,7 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   const [death, setDeath] = useState(null);
   const [modOpen, setModOpen] = useState(false);
   const [wheelOpen, setWheelOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     state.stats = { maxMass: 0, lastMass: 0, bestRank: 99 };
@@ -48,72 +48,79 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   }, []);
 
   useEffect(() => {
-    const onKeyEsc = (e) => { if (e.code === 'Escape') setPaused((v) => !v); };
-    window.addEventListener('keydown', onKeyEsc);
-    return () => window.removeEventListener('keydown', onKeyEsc);
+    const onKey = (e) => { if (e.code === 'Escape') setPaused((v) => { sessionRef.current?.setPaused(!v); return !v; }); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  useEffect(() => { state.profile = profile; setSfxVolume(profile.settings.sfx); }, [profile]);
 
   const s = sessionRef.current;
   const settings = profile.settings;
-  const setSettings = (next) => { state.profile = { ...profile, settings: next }; onProfile({ ...profile, settings: next }); };
-  const setLayout = (layout) => setSettings({ ...settings, touch: { ...settings.touch, layout } });
+  const touch = getTouchSettings(profile);
+  const setSettings = (next) => onProfile({ ...profile, settings: next });
+  const hudLeft = touchActualPoint(touch.layout.hudGroup, touch).x < 0.5;
+  const groupScale = touch.layout.hudGroup.size;
+  const statsWidth = Math.min(760, Math.max(560, window.innerWidth * 0.48));
+
+  const showToast = (text) => { setToast(text); setTimeout(() => setToast(''), 1700); };
 
   return (
-    <section id="gameScreen" className="screen">
+    <section id="gameScreen" className={`screen${death ? ' death-ui-hidden' : ''}`}>
       <canvas id="gameCanvas" ref={canvasRef} />
 
-      {settings.showStatsBar && !editing && (
-        <div className="hud-stats-anchor" style={hudStyle(settings.touch.layout, 'stats')}>
-          <HudStatsBar stats={{ ...stats, seasonCoins: profile.seasonCoinsPicked || 0 }} fps={settings.showFps ? (stats.fps || 60) : null} />
-        </div>
-      )}
+      <div id="touchControlLayer">
+        {settings.showStatsBar !== false && touch.layout.stats.visible && (
+          <div id="hudStatsBar" className="hud-stats-bar" style={controlStyle(touch, 'stats', statsWidth, 50)}>
+            <HudStatsBar
+              stats={{ ...stats, seasonCoins: profile.seasonCoinsPicked || 0 }}
+              fps={settings.showFps === false ? null : stats.fps}
+            />
+          </div>
+        )}
 
-      {!editing && (
-        <nav className="hud-top-actions" style={hudStyle(settings.touch.layout, 'hudGroup')} aria-label="Game HUD controls">
-          <button className={`hud-square-btn${boardOpen ? ' active' : ''}`} onClick={() => setBoardOpen((v) => !v)} title="Leaderboard">♛</button>
-          {settings.showRecordButton && <button className="hud-square-btn record" title="Record coming later">🎬</button>}
-          <button className={`hud-square-btn${modOpen ? ' active' : ''}`} onClick={() => setModOpen((v) => !v)} title="Mod menu">⚙</button>
-          <button className="hud-square-btn" onClick={() => setPaused(true)} title="Pause">Ⅱ</button>
-        </nav>
-      )}
+        {touch.layout.hudGroup.visible && (
+          <nav id="hudTopActions" className="hud-top-actions" style={{ ...controlStyle(touch, 'hudGroup', 224, 50 * groupScale), width: 'auto', gap: `${8 * groupScale}px` }}>
+            <button className={`hud-square-btn${boardOpen ? ' active' : ''}`} style={{ width: 50 * groupScale, height: 50 * groupScale, fontSize: 22 * groupScale }}
+              onPointerDown={(e) => { e.preventDefault(); setBoardOpen((v) => !v); playSfx('button'); }}>♛</button>
+            {settings.showRecordButton !== false && (
+              <button className="hud-square-btn record" style={{ width: 50 * groupScale, height: 50 * groupScale, fontSize: 22 * groupScale }}
+                onPointerDown={(e) => { e.preventDefault(); showToast('Recording button is ready — capture functionality will be added later.'); playSfx('button'); }}>🎬</button>
+            )}
+            <button className={`hud-square-btn${modOpen ? ' active' : ''}`} style={{ width: 50 * groupScale, height: 50 * groupScale, fontSize: 22 * groupScale }}
+              onPointerDown={(e) => { e.preventDefault(); setModOpen((v) => !v); playSfx('button'); }}>⚙</button>
+            <button className="hud-square-btn" style={{ width: 50 * groupScale, height: 50 * groupScale, fontSize: 22 * groupScale }}
+              onPointerDown={(e) => { e.preventDefault(); setPaused(true); s?.setPaused(true); }}>Ⅱ</button>
+          </nav>
+        )}
 
-      {!editing && <HudLeaderboard rows={stats.leaderboard} open={boardOpen} />}
-      {settings.showMiniMap && !editing && <HudMiniMap playerPos={stats.playerPos} />}
+        {!death && <TouchControls profile={profile} session={s} onEmoji={() => { setWheelOpen(true); playSfx('button'); }} />}
+      </div>
 
-      {!editing && !death && (
-        <TouchControls profile={profile} session={s} onEmoji={() => setWheelOpen(true)} />
-      )}
+      <HudLeaderboard rows={stats.leaderboard} selfRank={stats.selfRank} selfName={stats.selfName} open={boardOpen} />
+      {settings.showMiniMap !== false && <HudMiniMap playerPos={stats.playerPos} />}
+      <div className={`hud-toast${toast ? ' show' : ''}`}>{toast}</div>
 
       {wheelOpen && (
-        <EmojiWheel
-          profile={profile}
-          onEmoji={(id) => s?.playEmoji(id)}
-          onEmote={(id) => s?.playEmote(id)}
-          onClose={() => setWheelOpen(false)}
-        />
+        <EmojiWheel profile={profile} onEmoji={(id) => s?.playEmoji(id)} onEmote={(id) => s?.playEmote(id)} onClose={() => setWheelOpen(false)} />
       )}
 
-      {modOpen && !editing && (
-        <ModMenu
-          profile={profile}
-          onSettings={setSettings}
-          onAdmin={(action, value) => s?.admin(action, value)}
-          onEditLayout={() => { setModOpen(false); setEditing(true); }}
-          onClose={() => setModOpen(false)}
-        />
-      )}
-
-      {editing && (
-        <LayoutEditor layout={settings.touch.layout} onChange={setLayout} onFinish={() => setEditing(false)} />
+      {modOpen && (
+        <ModMenu profile={profile} world={s?.world} leftSide={hudLeft} onSettings={setSettings} onClose={() => setModOpen(false)} />
       )}
 
       {paused && !death && (
         <div className="overlay">
           <div className="panel">
             <h2>Paused</h2>
+            <div className="setting-row">
+              <label>Sound effects</label>
+              <input type="range" min="0" max="100" value={Math.round(settings.sfx * 100)}
+                onChange={(e) => setSettings({ ...settings, sfx: Number(e.target.value) / 100 })} />
+            </div>
             <div className="panel-actions">
               <button className="secondary" onClick={onExit}>Quit to Menu</button>
-              <button className="sky" onClick={() => setPaused(false)}>Resume</button>
+              <button className="sky" onClick={() => { setPaused(false); s?.setPaused(false); }}>Resume</button>
             </div>
           </div>
         </div>

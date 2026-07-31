@@ -1,75 +1,121 @@
+import { useState } from 'react';
 import ModalShell from './ModalShell';
-import '@/styles/blobrush-shop.css';
+import TouchLayoutEditor from './TouchLayoutEditor';
+import { getTouchSettings } from '@/game/hudLayout';
+import { playSfx } from '@/game/audio';
+import '@/styles/blobrush-modal.css';
+import '@/styles/blobrush-settings.css';
 
-function Slider({ label, value, min, max, step = 1, suffix = '', onChange }) {
-  return (
-    <div className="setting-row">
-      <span>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
-      <b style={{ minWidth: 52, textAlign: 'right' }}>{value}{suffix}</b>
-    </div>
-  );
-}
+const TABS = [
+  { id:'game', icon:'⚙️', label:'Game Options' },
+  { id:'graphics', icon:'🖥️', label:'Graphic Settings' },
+  { id:'sfx', icon:'🔊', label:'SFX' },
+  { id:'touch', icon:'📱', label:'Touch Screen' },
+  { id:'keys', icon:'⌨️', label:'Key Bindings' },
+  { id:'thanks', icon:'❤️', label:'Thanks' },
+];
 
-function Toggle({ label, value, onChange }) {
-  return (
-    <div className="setting-row">
-      <span>{label}</span>
-      <button className={`switch-btn${value ? ' on' : ''}`} onClick={() => onChange(!value)}>{value ? 'ON' : 'OFF'}</button>
-    </div>
-  );
-}
+const Switch = ({ on, onClick }) => (
+  <button className="settings-switch" type="button" aria-pressed={!!on} onClick={() => { playSfx('button'); onClick(); }}><span /></button>
+);
 
+// Settings modal, tab for tab identical to the original build.
 export default function SettingsModal({ profile, onChange, onClose }) {
+  const [tab, setTab] = useState('touch');
   const s = profile.settings;
+  const touch = getTouchSettings(profile);
   const set = (patch) => onChange({ ...s, ...patch });
+  const setTouch = (patch) => onChange({ ...s, joystick: patch.joystickSize ?? touch.joystickSize, touch: { ...touch, ...patch } });
+
+  const TouchToggle = ({ label, k }) => (
+    <div className="setting-row setting-toggle-row"><label>{label}</label><Switch on={!!touch[k]} onClick={() => setTouch({ [k]: !touch[k] })} /></div>
+  );
 
   return (
-    <ModalShell title="Settings" onClose={onClose}>
-      <div className="settings-grid">
-        <div className="settings-group">
-          <h4>Audio</h4>
-          <Slider label="Sound effects" value={Math.round(s.sfx * 100)} min={0} max={100} suffix="%" onChange={(v) => set({ sfx: v / 100 })} />
-          <Slider label="Music" value={Math.round(s.music * 100)} min={0} max={100} suffix="%" onChange={(v) => set({ music: v / 100 })} />
-        </div>
+    <ModalShell title="Settings" onClose={onClose} className="settings-modal">
+      <div className="settings-tabs" role="tablist">
+        {TABS.map((t) => (
+          <button key={t.id} className={`settings-tab${tab === t.id ? ' active' : ''}`} onClick={() => { playSfx('button'); setTab(t.id); }}>
+            {t.icon} <span>{t.label}</span>
+          </button>
+        ))}
+      </div>
 
-        <div className="settings-group">
-          <h4>Graphics</h4>
-          <div className="setting-row">
-            <span>Quality</span>
-            <select value={s.quality} onChange={(e) => set({ quality: e.target.value })}>
-              <option value="high">High</option>
-              <option value="low">Performance</option>
-            </select>
-          </div>
-          <Toggle label="Cosmetics" value={s.showCosmetics} onChange={(v) => set({ showCosmetics: v })} />
-          <Toggle label="Glow effects" value={s.showGlows} onChange={(v) => set({ showGlows: v })} />
-          <Toggle label="Animated skins" value={s.animateSkins} onChange={(v) => set({ animateSkins: v })} />
-          <Slider label="Animation delay" value={s.animationDelay} min={50} max={500} step={10} suffix="ms" onChange={(v) => set({ animationDelay: v })} />
-        </div>
+      <div className="settings-tab-scroll">
+        {tab === 'game' && (
+          <section className="settings-panel active">
+            <h3 className="settings-panel-title">Game Options</h3>
+            <div className="setting-row setting-toggle-row"><label>📊 Show FPS counter</label><Switch on={s.showFps !== false} onClick={() => set({ showFps: s.showFps === false })} /></div>
+            <div className="setting-row setting-toggle-row"><label>🎯 Show aiming cursor</label><Switch on={s.showReticle !== false} onClick={() => set({ showReticle: s.showReticle === false })} /></div>
+            <div className="setting-row setting-toggle-row"><label>📈 Show top stats bar</label><Switch on={s.showStatsBar !== false} onClick={() => set({ showStatsBar: s.showStatsBar === false })} /></div>
+            <div className="setting-row setting-toggle-row"><label>🗺️ Show mini map</label><Switch on={s.showMiniMap !== false} onClick={() => set({ showMiniMap: s.showMiniMap === false })} /></div>
+            <div className="setting-row setting-toggle-row"><label>🎬 Show record button</label><Switch on={s.showRecordButton !== false} onClick={() => set({ showRecordButton: s.showRecordButton === false })} /></div>
+          </section>
+        )}
 
-        <div className="settings-group">
-          <h4>Camera</h4>
-          <Slider label="Camera zoom" value={s.cameraZoom} min={60} max={160} step={5} suffix="%" onChange={(v) => set({ cameraZoom: v })} />
-          <Toggle label="Fixed camera zoom" value={s.fixedCameraZoom} onChange={(v) => set({ fixedCameraZoom: v })} />
-        </div>
+        {tab === 'graphics' && (
+          <section className="settings-panel active">
+            <h3 className="settings-panel-title">Graphic Settings</h3>
+            <div className="setting-row"><label>✨ Graphics quality</label>
+              <div className="pills">
+                <button className={s.quality === 'high' ? 'active' : ''} onClick={() => set({ quality: 'high' })}>High</button>
+                <button className={s.quality === 'low' ? 'active' : ''} onClick={() => set({ quality: 'low' })}>Battery saver</button>
+              </div>
+            </div>
+            <div className="setting-row setting-toggle-row"><label>🎩 Show player cosmetics</label><Switch on={s.showCosmetics !== false} onClick={() => set({ showCosmetics: s.showCosmetics === false })} /></div>
+            <div className="setting-row setting-toggle-row"><label>💫 Show cell glows</label><Switch on={s.showGlows !== false} onClick={() => set({ showGlows: s.showGlows === false })} /></div>
+            <div className="setting-row setting-toggle-row"><label>🌊 Animate player skins</label><Switch on={s.animateSkins !== false} onClick={() => set({ animateSkins: s.animateSkins === false })} /></div>
+            <p className="settings-help">Turning animated skins off keeps every animated skin visible as a static frame.</p>
+          </section>
+        )}
 
-        <div className="settings-group">
-          <h4>HUD</h4>
-          <Toggle label="Stats bar" value={s.showStatsBar} onChange={(v) => set({ showStatsBar: v })} />
-          <Toggle label="Mini map" value={s.showMiniMap} onChange={(v) => set({ showMiniMap: v })} />
-          <Toggle label="FPS counter" value={s.showFps} onChange={(v) => set({ showFps: v })} />
-          <Toggle label="Aim reticle" value={s.showReticle} onChange={(v) => set({ showReticle: v })} />
-        </div>
+        {tab === 'sfx' && (
+          <section className="settings-panel active">
+            <h3 className="settings-panel-title">Sound</h3>
+            <div className="setting-row setting-range-row"><label>🔊 Sound effects</label>
+              <input type="range" min="0" max="100" step="5" value={Math.round(s.sfx * 100)} onChange={(e) => set({ sfx: Number(e.target.value) / 100 })} />
+              <output>{Math.round(s.sfx * 100)}%</output></div>
+            <div className="setting-row setting-range-row"><label>🎵 Music</label>
+              <input type="range" min="0" max="100" step="5" value={Math.round(s.music * 100)} onChange={(e) => set({ music: Number(e.target.value) / 100 })} />
+              <output>{Math.round(s.music * 100)}%</output></div>
+          </section>
+        )}
 
-        <div className="settings-group">
-          <h4>Controls</h4>
-          <Slider label="Macro feed speed" value={s.macroSpeed} min={10} max={120} step={5} suffix="ms" onChange={(v) => set({ macroSpeed: v })} />
-          <Slider label="Macro multiplier" value={s.macroMultiplier} min={1} max={16} onChange={(v) => set({ macroMultiplier: v })} />
-          <Toggle label="Show touch buttons" value={s.touch.showButtons} onChange={(v) => set({ touch: { ...s.touch, showButtons: v } })} />
-          <Toggle label="Dynamic joystick" value={s.touch.dynamicButtons} onChange={(v) => set({ touch: { ...s.touch, dynamicButtons: v } })} />
-          <Slider label="Joystick size" value={Math.round(s.touch.joystickSize * 100)} min={60} max={160} step={5} suffix="%" onChange={(v) => set({ touch: { ...s.touch, joystickSize: v / 100 } })} />
-        </div>
+        {tab === 'touch' && (
+          <section className="settings-panel active">
+            <h3 className="settings-panel-title">TouchScreen Layout</h3>
+            <TouchToggle label="📱 Show Mobile Buttons" k="showButtons" />
+            <TouchToggle label="↔️ Invert Buttons Positions" k="invertButtons" />
+            <TouchToggle label="◀️▶️ Dynamic Buttons Position" k="dynamicButtons" />
+            <TouchToggle label="🛑 Stop On Release" k="stopOnRelease" />
+            <TouchToggle label="👉 Direction on touch" k="directionOnTouch" />
+            <div className="setting-row setting-range-row"><label>🕹️ Joystick Size</label>
+              <input type="range" min="65" max="165" step="5" value={Math.round(touch.joystickSize * 100)} onChange={(e) => setTouch({ joystickSize: Number(e.target.value) / 100 })} />
+              <output>{Math.round(touch.joystickSize * 100)}%</output></div>
+            <div className="setting-row setting-range-row"><label>🕹️ Joystick Sensibility</label>
+              <input type="range" min="50" max="200" step="5" value={Math.round(touch.joystickSensitivity * 100)} onChange={(e) => setTouch({ joystickSensitivity: Number(e.target.value) / 100 })} />
+              <output>{Math.round(touch.joystickSensitivity * 100)}%</output></div>
+            <TouchLayoutEditor touch={touch} onSave={(layout) => setTouch({ layout })} />
+          </section>
+        )}
+
+        {tab === 'keys' && (
+          <section className="settings-panel active">
+            <h3 className="settings-panel-title">Key Bindings</h3>
+            <div className="key-bind-row"><span>Move</span><b>W A S D / Arrow keys</b></div>
+            <div className="key-bind-row"><span>Split</span><b>Space</b></div>
+            <div className="key-bind-row"><span>Split ×2 / ×4</span><b>Q / R</b></div>
+            <div className="key-bind-row"><span>Feed mass</span><b>E</b></div>
+            <div className="key-bind-row"><span>Pause</span><b>Escape</b></div>
+          </section>
+        )}
+
+        {tab === 'thanks' && (
+          <section className="settings-panel active">
+            <h3 className="settings-panel-title">Thanks</h3>
+            <div className="settings-thanks">❤️ Thanks for play-testing Blob Rush. Your control layout is stored locally on this device.</div>
+          </section>
+        )}
       </div>
     </ModalShell>
   );
