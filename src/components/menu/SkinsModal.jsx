@@ -21,6 +21,7 @@ export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
   const [filter, setFilter] = useState('owned');
   const [previewId, setPreviewId] = useState(profile.skin);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [cosmeticSel, setCosmeticSel] = useState(null);
 
   const isCosmetics = filter === 'cosmetics';
   const isBadges = filter === 'badges';
@@ -32,16 +33,18 @@ export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
   return (
     <ModalShell title="Skins" onClose={onClose} bodyClass="skins-layout">
       <aside className="skin-preview-panel">
-        <div className="skin-preview-stage">
+        <div className={`skin-preview-stage${isCosmetics ? ' grid-bg' : ''}`}>
           <SkinPreviewCanvas profile={profile} skinId={preview.id} />
         </div>
         <div>
-          <span className="skin-preview-rarity" style={{ background: rarityColor(preview.rarity) }}>{preview.rarity}</span>
-          <h3 className="skin-preview-name">{preview.name}</h3>
-          <p className="skin-preview-type">
+          <span className="skin-preview-rarity" style={{ background: isCosmetics ? '#f59e0b' : rarityColor(preview.rarity) }}>
+            {isCosmetics ? 'Cosmetic' : preview.rarity}
+          </span>
+          <h3 className="skin-preview-name">{isCosmetics ? (cosmeticSel?.name || 'Cosmetics') : preview.name}</h3>
+          <p className="skin-preview-type" hidden={isCosmetics}>
             {preview.pattern === 'custom' ? 'VIP custom skin • uploaded by you' : `${preview.animated ? 'Premium animated' : 'Free static'} skin`}
           </p>
-          <div className="skin-preview-status">
+          <div className="skin-preview-status" hidden={isCosmetics}>
             <span className="skin-preview-pill">{equipped ? '✓ Currently equipped' : owned ? 'Ready to equip' : '🔒 Not owned'}</span>
             <span className="skin-preview-pill">{getSkinCategory(preview) === 'vip' ? 'VIP' : preview.animated ? 'Premium' : 'Free'}</span>
             {preview.reactive && <span className="skin-preview-pill">Reactive movement FX</span>}
@@ -62,7 +65,7 @@ export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
             <button key={f.id} className={`skin-filter-btn${filter === f.id ? ' active' : ''}`} onClick={() => setFilter(f.id)}>{f.label}</button>
           ))}
         </div>
-        {isCosmetics && <SkinCosmeticsPanel profile={profile} onProfile={onProfile} />}
+        {isCosmetics && <SkinCosmeticsPanel profile={profile} onProfile={onProfile} onSelect={setCosmeticSel} />}
         {isBadges && <SkinBadgesPanel profile={profile} onProfile={onProfile} />}
         <div className="shop-message" hidden={isCosmetics || isBadges}>
           {filter === 'premium'
@@ -93,7 +96,7 @@ export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
       </section>
 
       {editorOpen && (
-        <CosmeticEditor profile={profile} onProfile={onProfile} onClose={() => setEditorOpen(false)} />
+        <CosmeticEditor profile={profile} cosmeticId={cosmeticSel?.id} onProfile={onProfile} onClose={() => setEditorOpen(false)} />
       )}
     </ModalShell>
   );

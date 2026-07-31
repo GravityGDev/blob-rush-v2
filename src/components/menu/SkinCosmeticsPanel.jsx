@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import '@/styles/blobrush-cosmetic.css';
 import { SHOP_COSMETICS } from '@/game/skins';
 
@@ -7,10 +8,17 @@ const SECTIONS = [
 ];
 
 // Owned-cosmetics grid from the original skins menu (hat + overlay slots).
-export default function SkinCosmeticsPanel({ profile, onProfile }) {
+export default function SkinCosmeticsPanel({ profile, onProfile, onSelect }) {
   const owned = SHOP_COSMETICS.filter((item) => (profile.ownedCosmetics || []).includes(item.id));
 
+  useEffect(() => {
+    const current = owned.find((i) => profile.equippedCosmetics?.[i.slot] === i.id) || owned[0];
+    if (current) onSelect?.(current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggle = (item) => {
+    onSelect?.(item);
     const equipped = { ...(profile.equippedCosmetics || {}) };
     equipped[item.slot] = equipped[item.slot] === item.id ? null : item.id;
     onProfile({ ...profile, equippedCosmetics: equipped });
