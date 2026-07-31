@@ -180,9 +180,13 @@ export function render(ctx, w, h, world, cam, opts) {
   // Manual zoom-out never increases what is simulated on screen: the render
   // area is the tighter of the natural camera view and the current view, and
   // is additionally capped by the fixed 1280x720 budget.
+  // Hard world-space ceiling as well, so growing mass (which zooms the camera
+  // out) can never keep widening the amount of stuff being drawn.
+  const MAX_HALF_W = 3200;
+  const MAX_HALF_H = 1800;
   const budgetScale = Math.max(cam.scale, cullScale);
-  const renderHalfW = Math.min(FIXED_RENDER_WIDTH * 0.5, w / 2 + 90) / budgetScale;
-  const renderHalfH = Math.min(FIXED_RENDER_HEIGHT * 0.5, h / 2 + 90) / budgetScale;
+  const renderHalfW = Math.min(Math.min(FIXED_RENDER_WIDTH * 0.5, w / 2 + 90) / budgetScale, MAX_HALF_W);
+  const renderHalfH = Math.min(Math.min(FIXED_RENDER_HEIGHT * 0.5, h / 2 + 90) / budgetScale, MAX_HALF_H);
   const renderView = {
     l: cam.x - renderHalfW,
     r: cam.x + renderHalfW,
