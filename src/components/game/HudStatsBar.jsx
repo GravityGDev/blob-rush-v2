@@ -11,7 +11,7 @@ export default function HudStatsBar({ stats, fps }) {
     <div className="hud-stats-bar" aria-label="Match statistics">
       <Stat icon="⚖️" label="Mass" value={stats.mass.toLocaleString()} />
       <Stat icon="🪙" label="Season coins" value={stats.seasonCoins || 0} />
-      <Stat icon="⚡" label="FPS" value={fps} />
+      {fps !== null && <Stat icon="⚡" label="FPS" value={fps} />}
       <Stat icon="📶" label="Ping" value="20 ms" />
       <Stat icon="☄️" label="Kills" value={stats.kills} />
       <Stat icon="▥" label="Bandwidth" value="1 KB/s" />

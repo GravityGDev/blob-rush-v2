@@ -2,7 +2,7 @@ import { useState } from 'react';
 import '@/styles/blobrush-menu.css';
 import MenuAvatarCanvas from './MenuAvatarCanvas';
 
-export default function MainMenuScreen({ profile, onNickname, onPlay, onOpenModal }) {
+export default function MainMenuScreen({ profile, roomLabel, roomMeta, onNickname, onPlay, onOpenModal }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const open = (id) => { setDrawerOpen(false); onOpenModal?.(id); };
 
@@ -59,8 +59,8 @@ export default function MainMenuScreen({ profile, onNickname, onPlay, onOpenModa
                         <button className="change-server-btn" onClick={() => open('server')}>Change Server</button>
                         <div className="selected-room-summary">
                           <small>Selected arena</small>
-                          <strong>Free For All · #8080</strong>
-                          <div className="selected-room-meta"><span className="room-online-dot" /><span>Open · 18/35 players</span></div>
+                          <strong>{roomLabel}</strong>
+                          <div className="selected-room-meta"><span className="room-online-dot" /><span>{roomMeta}</span></div>
                         </div>
                       </div>
                       <button className="primary-btn" onClick={onPlay}>▶ ENTER ARENA</button>

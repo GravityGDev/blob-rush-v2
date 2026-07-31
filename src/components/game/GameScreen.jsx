@@ -51,7 +51,9 @@ export default function GameScreen({ profile, onExit, onMatchEnd }) {
     <section id="gameScreen" className="screen">
       <canvas id="gameCanvas" ref={canvasRef} />
 
-      <HudStatsBar stats={{ ...stats, seasonCoins: profile.seasonCoinsPicked || 0 }} fps={stats.fps || 60} />
+      {profile.settings.showStatsBar && (
+        <HudStatsBar stats={{ ...stats, seasonCoins: profile.seasonCoinsPicked || 0 }} fps={profile.settings.showFps ? (stats.fps || 60) : null} />
+      )}
 
       <nav className="hud-top-actions" aria-label="Game HUD controls">
         <button className={`hud-square-btn${boardOpen ? ' active' : ''}`} onClick={() => setBoardOpen((v) => !v)} title="Leaderboard">♛</button>
@@ -61,7 +63,7 @@ export default function GameScreen({ profile, onExit, onMatchEnd }) {
       </nav>
 
       <HudLeaderboard rows={stats.leaderboard} open={boardOpen} />
-      <HudMiniMap playerPos={stats.playerPos} />
+      {profile.settings.showMiniMap && <HudMiniMap playerPos={stats.playerPos} />}
 
       <div className="action-stack">
         <button id="normalFeedBtn" className="round-btn" onClick={() => s?.eject()}>FEED</button>

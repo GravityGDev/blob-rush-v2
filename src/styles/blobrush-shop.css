@@ -1,0 +1,62 @@
+/* Shop, season pass, lucky, settings and server browser styling. */
+.shop-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.shop-tab { border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.06); color:rgba(255,255,255,.72); border-radius:999px; padding:9px 15px; font-size:13px; font-weight:900; cursor:pointer; }
+.shop-tab.active { background:#0ea5e9; border-color:rgba(14,165,233,.5); color:#fff; }
+.shop-note { min-height:20px; margin-bottom:12px; color:#7dd3fc; font-size:13px; font-weight:800; }
+.shop-balance { display:flex; gap:8px; align-items:center; font-weight:900; color:#fcd34d; font-size:14px; }
+.shop-balance .tokens { color:#f472b6; }
+
+.shop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+.shop-grid.wide { grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+.shop-grid.tiny { grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); }
+.shop-item { display:flex; flex-direction:column; gap:8px; padding:14px; border-radius:18px; border:1px solid rgba(255,255,255,.10); background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.03)); }
+.shop-item.owned { border-color:rgba(56,189,248,.42); }
+.shop-item .icon { font-size:30px; line-height:1; }
+.shop-item h4 { margin:0; font-size:15px; font-weight:900; }
+.shop-item p { margin:0; font-size:12px; color:rgba(255,255,255,.55); line-height:1.35; flex:1; }
+.shop-item .row { display:flex; gap:8px; align-items:center; }
+.price-tag { font-weight:1000; color:#fcd34d; font-size:13px; }
+.buy-btn { flex:1; border:0; border-radius:12px; padding:9px 12px; font-size:13px; font-weight:1000; cursor:pointer; color:#fff; background:linear-gradient(180deg,#0ea5e9,#0284c7); }
+.buy-btn.secondary { background:rgba(255,255,255,.10); }
+.buy-btn.equipped { background:rgba(34,197,94,.85); }
+.buy-btn:disabled { opacity:.5; cursor:default; }
+.badge-preview { width:56px; height:56px; }
+.badge-preview svg { width:100%; height:100%; }
+
+.redeem-row { display:flex; gap:10px; flex-wrap:wrap; max-width:520px; }
+.redeem-row input { flex:1; min-width:200px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#fff; padding:11px 14px; font-size:14px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+
+.season-head { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.season-tiers { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+.season-tier { display:grid; gap:8px; justify-items:center; padding:14px 10px; border-radius:18px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.045); text-align:center; }
+.season-tier.locked { opacity:.5; }
+.season-tier b { font-size:20px; }
+.season-tier small { color:rgba(255,255,255,.5); font-size:11px; }
+.season-tier .claim { width:100%; }
+
+.lucky-layout { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
+.lucky-card { display:grid; gap:14px; justify-items:center; padding:18px; border-radius:22px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.045); }
+.wheel-wrap { position:relative; width:min(260px,70vw); aspect-ratio:1; }
+.wheel-wrap .pointer { position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:22px; z-index:2; }
+.wheel { width:100%; height:100%; border-radius:50%; border:6px solid rgba(255,255,255,.16); transition:transform 3.4s cubic-bezier(.15,.9,.2,1); }
+.slot-reels { display:flex; gap:12px; }
+.slot-reel { width:72px; height:88px; display:grid; place-items:center; font-size:38px; border-radius:16px; background:rgba(2,6,23,.65); border:1px solid rgba(255,255,255,.12); }
+.lucky-result { min-height:22px; font-weight:900; color:#7dd3fc; text-align:center; }
+
+.settings-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; }
+.settings-group { display:grid; gap:12px; padding:16px; border-radius:20px; border:1px solid rgba(255,255,255,.09); background:rgba(255,255,255,.04); align-content:start; }
+.settings-group h4 { margin:0; font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.55); }
+.setting-row { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:13px; font-weight:800; }
+.setting-row input[type=range] { flex:1; max-width:160px; accent-color:#38bdf8; }
+.setting-row select { background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:6px 10px; font-weight:800; }
+.switch-btn { border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:6px 14px; font-size:12px; font-weight:1000; cursor:pointer; background:rgba(255,255,255,.08); color:rgba(255,255,255,.6); }
+.switch-btn.on { background:#22c55e; border-color:rgba(34,197,94,.5); color:#04180c; }
+
+.server-modes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.room-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+.room-card { display:grid; gap:6px; padding:14px; border-radius:18px; text-align:left; cursor:pointer; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.045); color:#fff; }
+.room-card.active { border-color:#38bdf8; background:rgba(56,189,248,.12); }
+.room-card b { font-size:17px; }
+.room-card small { color:rgba(255,255,255,.5); font-size:12px; }
+.room-bar { height:6px; border-radius:999px; background:rgba(255,255,255,.1); overflow:hidden; }
+.room-bar i { display:block; height:100%; background:linear-gradient(90deg,#22c55e,#38bdf8); }

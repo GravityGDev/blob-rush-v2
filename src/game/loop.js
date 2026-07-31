@@ -6,11 +6,12 @@ import { render } from './render/scene';
 import { playSfx, setSfxVolume } from './audio';
 import { state } from './state';
 import { START_MASS } from './constants';
+import { boosterActive } from './progression';
 
 export function createSession(canvas, profile, onStats) {
   const ctx = canvas.getContext('2d');
   const world = createWorld(profile.nickname || 'Blob', profile.skin, {
-    startMass: START_MASS,
+    startMass: boosterActive(profile, 'mass') ? Math.round(START_MASS * 1.25) : START_MASS,
     equippedCosmetics: profile.equippedCosmetics,
     cosmeticTransforms: profile.cosmeticTransforms,
     equippedBadge: profile.equippedBadge,
