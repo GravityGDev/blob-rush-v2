@@ -1,6 +1,6 @@
 import '@/styles/blobrush-modal.css';
 
-export default function ModalShell({ title, onClose, extraHead, className = '', bodyClass = '', children }) {
+export default function ModalShell({ title, onClose, extraHead, className = '', bodyClass = '', beforeBody = null, children }) {
   return (
     <div className="modal-backdrop" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className={`modal ${className}`}>
@@ -11,6 +11,7 @@ export default function ModalShell({ title, onClose, extraHead, className = '', 
             <button className="close-btn" onClick={onClose} aria-label="Close">✕</button>
           </div>
         </div>
+        {beforeBody}
         <div className={`modal-scroll ${bodyClass}`}>{children}</div>
       </div>
     </div>

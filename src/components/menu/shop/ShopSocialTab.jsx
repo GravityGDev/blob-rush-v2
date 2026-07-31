@@ -1,40 +1,36 @@
 import { SHOP_EMOJIS, SHOP_EMOTES } from '@/game/skins';
 
-function SocialGrid({ kind, items, owned, favorites, coins, onBuy, onFavorite }) {
-  return (
-    <div className="shop-grid tiny">
-      {items.map((item) => {
-        const isOwned = owned.includes(item.id);
-        const fav = favorites.includes(`${kind}:${item.id}`);
-        return (
-          <div key={item.id} className={`shop-item${isOwned ? ' owned' : ''}`}>
-            <span className="icon">{item.icon}</span>
-            <h4 style={{ fontSize: 13 }}>{item.name}</h4>
-            <p style={{ fontSize: 11 }}>{item.description}</p>
-            {isOwned ? (
-              <button className={`buy-btn${fav ? ' equipped' : ' secondary'}`} onClick={() => onFavorite(kind, item.id)}>
-                {fav ? '★ On wheel' : '☆ Add to wheel'}
-              </button>
-            ) : (
-              <div className="row">
-                <span className="price-tag">🪙 {item.price}</span>
-                <button className="buy-btn" disabled={coins < item.price} onClick={() => onBuy(kind, item.id)}>Buy</button>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+// Emoji / emote shop grid, matching the original social shop cards.
+export default function ShopSocialTab({ profile, category, onBuy, onFavorite }) {
+  const favorites = profile.favoriteSocial || [];
+  const cards = [];
 
-export default function ShopSocialTab({ profile, onBuy, onFavorite }) {
-  return (
-    <>
-      <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>Emojis</h3>
-      <SocialGrid kind="emoji" items={SHOP_EMOJIS} owned={profile.ownedEmojis} favorites={profile.favoriteSocial} coins={profile.coins} onBuy={onBuy} onFavorite={onFavorite} />
-      <h3 style={{ margin: '22px 0 10px', fontSize: 16 }}>Emotes</h3>
-      <SocialGrid kind="emote" items={SHOP_EMOTES} owned={profile.ownedEmotes} favorites={profile.favoriteSocial} coins={profile.coins} onBuy={onBuy} onFavorite={onFavorite} />
-    </>
-  );
+  const push = (items, kind, owned) => items.forEach((item) => {
+    const isOwned = owned.includes(item.id);
+    const favourite = favorites.includes(`${kind}:${item.id}`);
+    if (category === 'favourites' && !favourite) return;
+    cards.push(
+      <article key={`${kind}:${item.id}`} className={`social-shop-card${isOwned ? ' owned' : ''}${favourite ? ' favourite' : ''}`}>
+        {isOwned && (
+          <button className={`social-favourite-btn${favourite ? ' active' : ''}`} aria-pressed={favourite} onClick={() => onFavorite(kind, item.id)}>
+            {favourite ? '★' : '☆'}
+          </button>
+        )}
+        <div className={`social-shop-icon${kind === 'emote' ? ' emote' : ''}`}>{item.icon}</div>
+        <h3>{item.name}</h3>
+        <p>{item.description}</p>
+        <button className="social-shop-buy" disabled={isOwned} onClick={() => onBuy(kind, item.id)}>
+          {isOwned ? 'Owned' : item.price === 0 ? 'Claim free' : `🪙 ${item.price}`}
+        </button>
+      </article>
+    );
+  });
+
+  if (category === 'all' || category === 'emoji' || category === 'favourites') push(SHOP_EMOJIS, 'emoji', profile.ownedEmojis || []);
+  if (category === 'all' || category === 'emote' || category === 'favourites') push(SHOP_EMOTES, 'emote', profile.ownedEmotes || []);
+
+  if (!cards.length) {
+    return <div className="skin-empty-state">No favourites yet. Buy an emoji or emote, then tap its star.</div>;
+  }
+  return <div className="social-shop-grid">{cards}</div>;
 }
