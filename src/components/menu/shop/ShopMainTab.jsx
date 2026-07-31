@@ -1,45 +1,21 @@
 import { useState } from 'react';
-import { SKIN_PACKS, SHOP_COSMETICS, INDIVIDUAL_SHOP_SKINS, getSkin } from '@/game/skins';
+import { SHOP_COSMETICS, INDIVIDUAL_SHOP_SKINS } from '@/game/skins';
 import { boosterRemainingMs, formatDurationShort } from '@/game/progression';
 import SkinPreviewCanvas from '../SkinPreviewCanvas';
 
 // "Main" shop landing tab from the original build: newest pack, cosmetic, solo skin, coupon and boost status.
-export default function ShopMainTab({ profile, onBuyPack, onBuyCosmetic, onBuySkin, onRedeem, onOpenTab }) {
+export default function ShopMainTab({ profile, onBuyCosmetic, onBuySkin, onRedeem, onOpenTab }) {
   const [code, setCode] = useState('');
-  const newestPack = SKIN_PACKS[SKIN_PACKS.length - 1];
   const newestCosmetic = SHOP_COSMETICS[SHOP_COSMETICS.length - 1];
   const latestSingle = INDIVIDUAL_SHOP_SKINS[INDIVIDUAL_SHOP_SKINS.length - 1];
-  const ownedPack = profile.purchasedPacks.includes(newestPack.id);
   const ownedCosmetic = profile.ownedCosmetics.includes(newestCosmetic.id);
   const ownedSingle = profile.ownedSkins.includes(latestSingle.id);
-  const previewSkin = getSkin(newestPack.skinIds.find((id) => getSkin(id)?.animated) || newestPack.skinIds[0]);
   const massRemaining = boosterRemainingMs(profile, 'mass');
   const xpRemaining = boosterRemainingMs(profile, 'xp');
   const redeem = () => { if (code.trim()) { onRedeem(code.trim()); setCode(''); } };
 
   return (
     <div className="shop-grid shop-grid-main">
-      <article className="shop-card shop-card--pack">
-        <div className="shop-card-top">
-          <div><h3>{newestPack.name}</h3><p>{newestPack.description}</p></div>
-          {ownedPack && <span className="shop-owned-chip">Owned</span>}
-        </div>
-        <div className="shop-pack-preview">
-          <span className="shop-pack-label">Newest pack</span>
-          <SkinPreviewCanvas profile={profile} skinId={previewSkin.id} />
-        </div>
-        <div className="shop-feature-pills">
-          {newestPack.skinIds.slice(0, 6).map((id) => <span key={id} className="shop-feature-pill">{getSkin(id).name}</span>)}
-        </div>
-        <div className="shop-card-bottom">
-          <span className="shop-price">🪙 {newestPack.price}</span>
-          <div className="shop-card-links">
-            <button className="shop-mini-btn" onClick={() => onOpenTab('packs')}>View all packs</button>
-            <button className="shop-buy-btn" disabled={ownedPack} onClick={() => onBuyPack(newestPack.id)}>{ownedPack ? 'Purchased' : 'Buy Pack'}</button>
-          </div>
-        </div>
-      </article>
-
       <article className="shop-card shop-card--pack">
         <div className="shop-card-top">
           <div><h3>{newestCosmetic.name}</h3><p>Newest cosmetic drop • {newestCosmetic.slot === 'hat' ? 'Hat' : 'Overlay'} cosmetic with full adjustment controls.</p></div>
@@ -76,7 +52,7 @@ export default function ShopMainTab({ profile, onBuyPack, onBuyCosmetic, onBuySk
         <div className="shop-card-bottom">
           <span className="shop-price">🪙 {latestSingle.price}</span>
           <div className="shop-card-links">
-            <button className="shop-mini-btn" onClick={() => onOpenTab('skins')}>View solo skins</button>
+            <button className="shop-mini-btn" onClick={() => onOpenTab('skins')}>View animated skins</button>
             <button className="shop-buy-btn" disabled={ownedSingle} onClick={() => onBuySkin(latestSingle.id)}>{ownedSingle ? 'Purchased' : 'Buy Skin'}</button>
           </div>
         </div>

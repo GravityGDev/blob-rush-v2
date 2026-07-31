@@ -2,19 +2,17 @@ import { useState } from 'react';
 import ModalShell from './ModalShell';
 import '@/styles/blobrush-shop.css';
 import ShopMainTab from './shop/ShopMainTab';
-import ShopPacksTab from './shop/ShopPacksTab';
 import ShopSoloSkinsTab from './shop/ShopSoloSkinsTab';
 import ShopBoostersTab from './shop/ShopBoostersTab';
 import ShopCosmeticsTab from './shop/ShopCosmeticsTab';
 import ShopSocialTab from './shop/ShopSocialTab';
 import {
-  buySkinPack, buySingleSkin, buyCosmetic, equipCosmetic,
+  buySingleSkin, buyCosmetic, equipCosmetic,
   buySocial, toggleFavoriteSocial, buyBooster, redeemCode,
 } from '@/game/shop';
 
 const TABS = [
   { id: 'main', label: 'Main' },
-  { id: 'packs', label: 'Skin Packs' },
   { id: 'skins', label: 'Animated Skins' },
   { id: 'boosters', label: 'Boosters' },
   { id: 'cosmetics', label: 'Cosmetics' },
@@ -81,14 +79,12 @@ export default function ShopModal({ profile, onProfile, onClose }) {
       {tab === 'main' && (
         <ShopMainTab
           profile={profile}
-          onBuyPack={(id) => run(buySkinPack(profile, id))}
           onBuySkin={(id) => run(buySingleSkin(profile, id))}
           onBuyCosmetic={(id) => run(buyCosmetic(profile, id))}
           onRedeem={(code) => run(redeemCode(profile, code))}
           onOpenTab={setTab}
         />
       )}
-      {tab === 'packs' && <ShopPacksTab profile={profile} onBuyPack={(id) => run(buySkinPack(profile, id))} />}
       {tab === 'skins' && <ShopSoloSkinsTab profile={profile} onBuySkin={(id) => run(buySingleSkin(profile, id))} />}
       {tab === 'boosters' && <ShopBoostersTab profile={profile} onBuyBooster={(id, hours) => run(buyBooster(profile, id, hours))} />}
       {tab === 'cosmetics' && (

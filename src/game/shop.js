@@ -1,7 +1,7 @@
 // Pure purchase / equip helpers for the shop. Each returns { profile, message, ok }.
 import { cloneProfile } from './utils';
 import {
-  findSkinPack, findShopSingleSkin, findCosmetic, findBadge, findShopEmoji, findShopEmote,
+  findShopSingleSkin, findCosmetic, findBadge, findShopEmoji, findShopEmote,
   getDefaultCosmeticTransform, SHOP_REDEEM_CODES, SHOP_BOOSTERS,
 } from './skins';
 import { extendBooster } from './progression';
@@ -12,17 +12,6 @@ function spend(next, cost) {
   if (next.coins < cost) return false;
   next.coins -= cost;
   return true;
-}
-
-export function buySkinPack(profile, packId) {
-  const pack = findSkinPack(packId);
-  if (!pack) return fail(profile, 'Unknown pack.');
-  if (profile.purchasedPacks.includes(packId)) return fail(profile, 'You already own this pack.');
-  const next = cloneProfile(profile);
-  if (!spend(next, pack.price)) return fail(profile, 'Not enough coins.');
-  next.purchasedPacks.push(packId);
-  next.ownedSkins = [...new Set([...next.ownedSkins, ...pack.skinIds])];
-  return { profile: next, message: `Unlocked ${pack.name} (${pack.skinIds.length} skins)!`, ok: true };
 }
 
 export function buySingleSkin(profile, skinId) {

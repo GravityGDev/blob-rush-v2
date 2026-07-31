@@ -56,13 +56,6 @@ export const SKINS = [
   { id: 'nebulareign', name: 'Nebula Reign', price: 510, base: '#12081f', accent: '#60a5fa', pattern: 'nebulareign', animated: true, reactive: true, rarity: 'Transcendent', shopSingle: true, limited: true, description: 'An ultra-polished cosmic ruler skin with aurora waves and starfire depth.' },
 ];
 
-export const SKIN_PACKS = [
-  { id:'elemental', name:'Elemental Rush', icon:'🔥', price:550, description:'Fire, frost, lightning and solar energy.', skinIds:['blueflame','icestorm','lavapulse','solarflare','frostfire','thundercore'] },
-  { id:'cosmic', name:'Cosmic Legends', icon:'🌌', price:600, description:'Space, singularities, rifts and lunar power.', skinIds:['galaxy','voidsingularity','cosmicrift','bloodmoon','rainbowpulse'] },
-  { id:'neontech', name:'Neon Technology', icon:'⚡', price:550, description:'Plasma, grids, glitches, chrome and reactors.', skinIds:['plasma','cybergrid','digitalglitch','liquidchrome','arcreactor'] },
-  { id:'mystic', name:'Mystic Creatures', icon:'🐉', price:550, description:'Slime, shadows, blossoms, mist and dragons.', skinIds:['toxicslime','shadoweye','neonsakura','phantommist','emeralddragon'] },
-];
-
 export const SHOP_BOOSTERS = [
   { id:'mass', name:'Mass Booster', icon:'🟢', price6h:180, price24h:540, description:'+25% starting mass while active.' },
   { id:'xp', name:'XP Booster', icon:'⭐', price6h:220, price24h:660, description:'Earn 2× XP while active.' },
@@ -117,10 +110,15 @@ export const SHOP_COSMETICS = [
 ];
 
 export const FREE_SKIN_IDS = SKINS.filter((skin) => !skin.animated).map((skin) => skin.id);
-export const SHOP_SKIN_IDS = new Set(SKIN_PACKS.flatMap((pack) => pack.skinIds));
-export const INDIVIDUAL_SHOP_SKINS = SKINS.filter((skin) => skin.shopSingle);
+// Every animated skin is now sold individually; formerly pack-only skins get a rarity-based price.
+const RARITY_PRICE = { Common: 120, Rare: 180, Epic: 240, Legendary: 300, Mythic: 380, Transcendent: 480 };
+export const INDIVIDUAL_SHOP_SKINS = SKINS.filter((skin) => skin.animated).map((skin) => ({
+  ...skin,
+  shopSingle: true,
+  price: skin.price || RARITY_PRICE[skin.rarity] || 250,
+}));
 export const INDIVIDUAL_SHOP_SKIN_IDS = new Set(INDIVIDUAL_SHOP_SKINS.map((skin) => skin.id));
-export const findSkinPack = (id) => SKIN_PACKS.find((pack) => pack.id === id);
+export const SHOP_SKIN_IDS = INDIVIDUAL_SHOP_SKIN_IDS;
 export const findShopSingleSkin = (id) => INDIVIDUAL_SHOP_SKINS.find((skin) => skin.id === id);
 export const findCosmetic = (id) => SHOP_COSMETICS.find((item) => item.id === id);
 

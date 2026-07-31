@@ -1,7 +1,7 @@
 // Profile persistence (localStorage with in-memory fallback) and XP levelling.
 import { cloneProfile } from './utils';
 import {
-  FREE_SKIN_IDS, findSkinPack, findShopSingleSkin, findCosmetic, findBadge,
+  FREE_SKIN_IDS, findShopSingleSkin, findCosmetic, findBadge,
   findShopEmoji, findShopEmote, getDefaultCosmeticTransform, setRuntimeCustomSkins,
 } from './skins';
 
@@ -65,10 +65,10 @@ let memoryProfile = null;
 export function mergeProfile(p) {
   const customSkins = Array.isArray(p?.customSkins) ? p.customSkins.filter((skin) => skin?.id && skin?.imageData) : [];
   setRuntimeCustomSkins(cloneProfile(customSkins));
-  const purchasedPacks = Array.isArray(p?.purchasedPacks) ? p.purchasedPacks.filter((id) => !!findSkinPack(id)) : [];
   const purchasedSkins = Array.isArray(p?.purchasedSkins) ? p.purchasedSkins.filter((id) => !!findShopSingleSkin(id)) : [];
-  const packSkins = purchasedPacks.flatMap((id) => findSkinPack(id)?.skinIds || []);
-  const allOwned = [...new Set([...FREE_SKIN_IDS, ...packSkins, ...purchasedSkins, ...customSkins.map((skin) => skin.id)])];
+  // Legacy pack-owned skins stay owned now that every animated skin is sold individually.
+  const legacyOwned = Array.isArray(p?.ownedSkins) ? p.ownedSkins.filter((id) => !!findShopSingleSkin(id)) : [];
+  const allOwned = [...new Set([...FREE_SKIN_IDS, ...legacyOwned, ...purchasedSkins, ...customSkins.map((skin) => skin.id)])];
   const selectedSkin = allOwned.includes(p?.skin) ? p.skin : DEFAULTS.skin;
   const ownedCosmetics = Array.isArray(p?.ownedCosmetics) ? p.ownedCosmetics.filter((id) => !!findCosmetic(id)) : [];
   const equippedCosmetics = { ...DEFAULTS.equippedCosmetics, ...(p?.equippedCosmetics || {}) };
@@ -101,7 +101,6 @@ export function mergeProfile(p) {
     coins: isLegacyProfile ? Math.max(Number(p?.coins || 0), 1800) : Math.max(0, Number(p?.coins ?? DEFAULTS.coins)),
     skin: selectedSkin,
     customSkins,
-    purchasedPacks,
     purchasedSkins,
     redeemedCodes: Array.isArray(p?.redeemedCodes) ? [...new Set(p.redeemedCodes.map(String))] : [],
     ownedSkins: allOwned,

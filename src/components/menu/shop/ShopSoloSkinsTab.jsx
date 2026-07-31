@@ -9,7 +9,7 @@ export default function ShopSoloSkinsTab({ profile, onBuySkin }) {
         return (
           <article key={skin.id} className="shop-card shop-card--pack">
             <div className="shop-card-top">
-              <div><h3>{skin.name}</h3><p>{skin.description || 'Animated skin sold separately from bundles.'}</p></div>
+              <div><h3>{skin.name}</h3><p>{skin.description || 'Animated skin available for individual purchase.'}</p></div>
               {owned && <span className="shop-owned-chip">Owned</span>}
             </div>
             <div className="shop-pack-preview">
