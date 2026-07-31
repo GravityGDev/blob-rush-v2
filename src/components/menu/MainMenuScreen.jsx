@@ -42,7 +42,7 @@ export default function MainMenuScreen({ profile, onNickname, onPlay, onOpenModa
                 <div className="player-connect-card">
                   <div className="player-connect-inner">
                     <button type="button" className="menu-avatar-zone" onClick={() => open('skins')} aria-label="Open skins menu">
-                      <MenuAvatarCanvas skinId={profile.skin} />
+                      <MenuAvatarCanvas profile={profile} />
                     </button>
                     <div className="player-connect-fields">
                       <div className="name-card">

@@ -3,24 +3,21 @@ import { drawCell } from '@/game/render/cell';
 import { radiusFromMass } from '@/game/constants';
 import { getSkin } from '@/game/skins';
 
-// Mirrors the original HTML live menu preview: a real drawCell render of the
-// player's cell at 500 mass, with reactive movement for reactive skins.
-export default function MenuAvatarCanvas({ profile }) {
+// Live in-game cell preview used inside the Skins modal.
+export default function SkinPreviewCanvas({ profile, skinId }) {
   const ref = useRef(null);
-  const profileRef = useRef(profile);
-  profileRef.current = profile;
+  const dataRef = useRef({ profile, skinId });
+  dataRef.current = { profile, skinId };
 
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const cell = { id: -77, x: 0, y: 0, mass: 500, mx: 0, my: 0, vx: 0, vy: 0 };
+    const cell = { id: -88, x: 0, y: 0, mass: 500, mx: 0, my: 0, vx: 0, vy: 0 };
     let raf = 0;
-
     const frame = (now) => {
       raf = requestAnimationFrame(frame);
       const rect = canvas.getBoundingClientRect();
-      if (rect.width < 10 || rect.height < 10) return;
+      if (rect.width < 10) return;
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       const pw = Math.round(rect.width * dpr);
       const ph = Math.round(rect.height * dpr);
@@ -28,8 +25,8 @@ export default function MenuAvatarCanvas({ profile }) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
 
-      const p = profileRef.current;
-      const skin = getSkin(p.skin);
+      const { profile: p, skinId: id } = dataRef.current;
+      const skin = getSkin(id || p.skin);
       const t = now / 1000;
       cell.mx = skin.reactive ? 250 + Math.sin(t * 2.1) * 80 : 0;
       cell.my = skin.reactive ? Math.cos(t * 1.7) * 130 : 0;
@@ -40,7 +37,7 @@ export default function MenuAvatarCanvas({ profile }) {
       ctx.translate(rect.width * 0.5, rect.height * 0.6);
       ctx.scale(scale, scale);
       drawCell(ctx, {
-        id: -77,
+        id: -88,
         name: p.nickname || 'Blob',
         skin: skin.id,
         isBot: false,
@@ -54,5 +51,5 @@ export default function MenuAvatarCanvas({ profile }) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  return <canvas ref={ref} id="menuAvatarCanvas" className="menu-avatar-canvas" aria-hidden="true" />;
+  return <canvas ref={ref} className="skin-preview-canvas" aria-label="Live in-game skin preview" />;
 }

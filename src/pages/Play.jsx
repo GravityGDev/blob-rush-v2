@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import MainMenuScreen from '@/components/menu/MainMenuScreen';
+import SkinsModal from '@/components/menu/SkinsModal';
+import ProfileModal from '@/components/menu/ProfileModal';
 import GameScreen from '@/components/game/GameScreen';
 import { loadProfile, saveProfile, addXp, xpForLevel } from '@/game/save';
 
 export default function Play() {
   const [profile, setProfile] = useState(() => loadProfile());
   const [playing, setPlaying] = useState(false);
+  const [modal, setModal] = useState(null);
 
   const update = (patch) => {
     const next = { ...profile, ...patch };
@@ -34,20 +37,25 @@ export default function Play() {
   };
 
   if (playing) {
-    return (
-      <GameScreen
-        profile={profile}
-        onExit={() => setPlaying(false)}
-        onMatchEnd={handleMatchEnd}
-      />
-    );
+    return <GameScreen profile={profile} onExit={() => setPlaying(false)} onMatchEnd={handleMatchEnd} />;
   }
 
   return (
-    <MainMenuScreen
-      profile={{ ...profile, xpPercent: (profile.xp / xpForLevel(profile.level)) * 100 }}
-      onNickname={(nickname) => update({ nickname })}
-      onPlay={() => setPlaying(true)}
-    />
+    <>
+      <MainMenuScreen
+        profile={{ ...profile, xpPercent: (profile.xp / xpForLevel(profile.level)) * 100 }}
+        onNickname={(nickname) => update({ nickname })}
+        onPlay={() => setPlaying(true)}
+        onOpenModal={setModal}
+      />
+      {modal === 'skins' && (
+        <SkinsModal
+          profile={profile}
+          onEquip={(skin) => update({ skin })}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === 'profile' && <ProfileModal profile={profile} onClose={() => setModal(null)} />}
+    </>
   );
 }

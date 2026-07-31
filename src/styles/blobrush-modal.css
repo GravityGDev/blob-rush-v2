@@ -1,0 +1,66 @@
+/* Modal shell + skins/profile layouts ported from the original HTML build. */
+.modal-backdrop { position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center; padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); background:rgba(0,0,0,.62); backdrop-filter:blur(8px); color:#fff; font-family:Inter, ui-rounded, "Trebuchet MS", system-ui, sans-serif; }
+.modal { width:min(96vw,1180px); height:min(90dvh,760px); max-height:calc(100dvh - 16px); display:flex; flex-direction:column; overflow:hidden; border:1px solid rgba(255,255,255,.11); background:rgba(15,23,42,.988); border-radius:22px; }
+.modal-head { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:clamp(12px,2.2vh,20px) clamp(14px,2.4vw,22px); border-bottom:1px solid rgba(255,255,255,.08); }
+.modal-head h2 { margin:0; font-size:clamp(20px,3vw,28px); }
+.modal-scroll { flex:1; min-height:0; overflow:auto; padding:clamp(12px,2vw,20px); overscroll-behavior:contain; }
+.close-btn { width:clamp(36px,6vh,44px); height:clamp(36px,6vh,44px); flex:0 0 auto; border:0; border-radius:50%; background:rgba(255,255,255,.10); color:#fff; font-size:22px; cursor:pointer; }
+
+.skins-layout { display:grid; grid-template-columns:minmax(310px,40%) minmax(0,1fr); gap:clamp(12px,2vw,22px); align-items:start; }
+.skin-preview-panel { display:grid; gap:clamp(10px,2vh,18px); align-content:start; padding:clamp(12px,2vw,20px); border-radius:22px; background:linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.08); }
+.skin-preview-stage { position:relative; min-height:clamp(220px,42vh,340px); overflow:hidden; border-radius:20px; display:grid; place-items:center; background:radial-gradient(circle at 50% 35%, rgba(96,165,250,.12), rgba(8,15,35,.6)); border:1px solid rgba(255,255,255,.06); }
+.skin-preview-canvas { display:block; width:min(100%,320px); height:auto; aspect-ratio:1; border-radius:18px; }
+.skin-preview-rarity { justify-self:start; padding:5px 10px; border-radius:999px; font-size:11px; font-weight:1000; letter-spacing:.08em; text-transform:uppercase; color:#fff; }
+.skin-preview-name { margin:0; font-size:clamp(24px,4vw,34px); line-height:1; }
+.skin-preview-type { margin:6px 0 0; color:rgba(255,255,255,.7); font-size:clamp(11px,1.7vw,14px); }
+.skin-preview-status { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.skin-preview-pill { padding:6px 9px; border-radius:999px; background:rgba(255,255,255,.06); color:rgba(255,255,255,.82); font-size:clamp(10px,1.5vw,13px); font-weight:800; }
+.skin-equip-btn { width:100%; border:1px solid rgba(56,189,248,.5); border-radius:14px; padding:12px 16px; background:linear-gradient(180deg,rgba(14,165,233,.95),rgba(2,132,199,.95)); color:#fff; font-size:15px; font-weight:1000; cursor:pointer; box-shadow:0 10px 24px rgba(14,165,233,.2); }
+.skin-equip-btn:disabled { cursor:default; opacity:.58; background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.12); box-shadow:none; }
+.skin-browser { min-width:0; }
+.shop-top { display:flex; align-items:center; gap:10px; color:#fcd34d; font-weight:900; margin-bottom:clamp(8px,1.8vh,16px); font-size:clamp(13px,2vw,18px); }
+.skin-filter-row { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.skin-filter-btn { border:1px solid rgba(255,255,255,.11); background:rgba(255,255,255,.06); color:rgba(255,255,255,.72); border-radius:999px; padding:clamp(7px,1.3vh,10px) clamp(10px,1.5vw,16px); font-size:clamp(11px,1.6vw,14px); font-weight:900; cursor:pointer; }
+.skin-filter-btn.active { background:#0ea5e9; color:#fff; border-color:rgba(14,165,233,.5); }
+.shop-message { min-height:18px; color:#7dd3fc; font-size:clamp(11px,1.6vw,14px); margin-bottom:12px; }
+.skins-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:clamp(8px,1.4vw,14px); }
+.skin-card { position:relative; min-width:0; min-height:clamp(132px,24vh,184px); border:1px solid rgba(255,255,255,.11); background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)); border-radius:18px; padding:clamp(10px,1.7vw,15px) 8px 36px; display:grid; justify-items:center; align-content:center; gap:clamp(6px,1.3vh,10px); cursor:pointer; overflow:hidden; transition:transform .14s ease, border-color .14s ease; }
+.skin-card:hover { transform:translateY(-2px); border-color:rgba(125,211,252,.34); }
+.skin-card.selected { border-color:#38bdf8; background:rgba(56,189,248,.10); box-shadow:0 10px 28px rgba(14,165,233,.14); }
+.skin-card.previewing { outline:2px solid rgba(125,211,252,.38); outline-offset:2px; }
+.skin-card > span.skin-name { font-size:clamp(12px,1.8vw,17px); font-weight:900; text-align:center; line-height:1.1; color:#fff; }
+.skin-swatch { width:clamp(58px,11vh,84px); height:clamp(58px,11vh,84px); border-radius:50%; border:clamp(4px,.8vh,6px) solid; display:block; background-size:200% 200%; }
+.skin-swatch.animated-preview { animation:skinPreviewShift 4.5s linear infinite; }
+.skin-swatch.animated-rainbow { animation:skinPreviewShift 2.5s linear infinite, rainbowHue 4.5s linear infinite; }
+@keyframes skinPreviewShift { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+@keyframes rainbowHue { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+.skin-rarity { position:absolute; top:10px; left:10px; padding:4px 8px; border-radius:999px; font-size:10px; font-weight:1000; letter-spacing:.08em; text-transform:uppercase; color:#fff; }
+.skin-equipped-badge { position:absolute; left:50%; bottom:8px; transform:translateX(-50%); padding:5px 10px; border-radius:999px; background:rgba(14,165,233,.95); border:1px solid rgba(125,211,252,.45); color:#fff; font-size:10px; font-weight:1000; white-space:nowrap; }
+.skin-locked-badge { position:absolute; bottom:7px; left:50%; transform:translateX(-50%); padding:4px 8px; border-radius:999px; background:rgba(15,23,42,.88); border:1px solid rgba(255,255,255,.16); color:#f8fafc; font-size:9px; font-weight:1000; white-space:nowrap; }
+.skin-empty-state { grid-column:1/-1; display:grid; place-items:center; min-height:160px; padding:22px; border:1px dashed rgba(255,255,255,.14); border-radius:18px; color:rgba(255,255,255,.5); text-align:center; font-size:13px; }
+
+.profile-layout { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.38fr); gap:clamp(12px,2vw,20px); align-items:start; }
+.profile-head { display:flex; gap:clamp(12px,2vw,18px); align-items:center; padding:clamp(12px,2vw,18px); border-radius:20px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); }
+.profile-head h3 { margin:0 0 3px; font-size:clamp(24px,4vw,34px); }
+.profile-head p { margin:2px 0; color:rgba(255,255,255,.52); font-size:clamp(12px,2vw,16px); }
+.profile-head .progress { margin-top:12px; width:100%; height:7px; background:rgba(255,255,255,.10); border-radius:999px; overflow:hidden; }
+.profile-head .progress > i { display:block; height:100%; background:linear-gradient(90deg,#38bdf8,#a78bfa); }
+.profile-skin-dot { width:clamp(68px,12vh,96px); height:clamp(68px,12vh,96px); min-width:clamp(68px,12vh,96px); border-radius:50%; border:6px solid; display:block; background-size:200% 200%; }
+.stats-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(8px,1.4vw,14px); align-content:start; }
+.stat-box { display:grid; justify-items:center; gap:6px; min-height:clamp(76px,15vh,116px); padding:clamp(10px,2vh,18px) clamp(8px,1.3vw,14px); border-radius:18px; background:rgba(255,255,255,.055); }
+.stat-box b { font-size:clamp(24px,4vw,36px); line-height:1.05; }
+.stat-box span { color:rgba(255,255,255,.42); font-size:clamp(9px,1.6vw,13px); text-transform:uppercase; letter-spacing:.09em; text-align:center; }
+
+@media (orientation:landscape) and (max-width:900px) {
+  .profile-layout { grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); }
+  .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .skins-layout { grid-template-columns:minmax(250px,36%) minmax(0,1fr); }
+  .skins-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media (orientation:portrait) {
+  .modal { width:100%; height:92dvh; max-height:92dvh; border-radius:24px 24px 0 0; }
+  .modal-backdrop { align-items:flex-end; padding:0; }
+  .profile-layout, .skins-layout { grid-template-columns:1fr; }
+  .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .skins-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
