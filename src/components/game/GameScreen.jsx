@@ -2,14 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import '@/styles/blobrush-game.css';
 import { createSession } from '@/game/loop';
 import { state } from '@/game/state';
+import { hudStyle } from '@/game/hudLayout';
 import HudStatsBar from './HudStatsBar';
 import HudMiniMap from './HudMiniMap';
 import HudLeaderboard from './HudLeaderboard';
 import DeathPanel from './DeathPanel';
+import TouchControls from './TouchControls';
+import EmojiWheel from './EmojiWheel';
+import ModMenu from './ModMenu';
+import LayoutEditor from './LayoutEditor';
 
 const EMPTY = { mass: 0, kills: 0, rank: 0, leaderboard: [], playerPos: null, fps: 60, alive: true };
 
-export default function GameScreen({ profile, onExit, onMatchEnd }) {
+export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   const canvasRef = useRef(null);
   const sessionRef = useRef(null);
   const startedAt = useRef(Date.now());
@@ -17,6 +22,9 @@ export default function GameScreen({ profile, onExit, onMatchEnd }) {
   const [boardOpen, setBoardOpen] = useState(false);
   const [paused, setPaused] = useState(false);
   const [death, setDeath] = useState(null);
+  const [modOpen, setModOpen] = useState(false);
+  const [wheelOpen, setWheelOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     state.stats = { maxMass: 0, lastMass: 0, bestRank: 99 };
@@ -39,39 +47,65 @@ export default function GameScreen({ profile, onExit, onMatchEnd }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onKeyEsc = (e) => { if (e.code === 'Escape') setPaused((v) => !v); };
   useEffect(() => {
+    const onKeyEsc = (e) => { if (e.code === 'Escape') setPaused((v) => !v); };
     window.addEventListener('keydown', onKeyEsc);
     return () => window.removeEventListener('keydown', onKeyEsc);
   }, []);
 
   const s = sessionRef.current;
+  const settings = profile.settings;
+  const setSettings = (next) => { state.profile = { ...profile, settings: next }; onProfile({ ...profile, settings: next }); };
+  const setLayout = (layout) => setSettings({ ...settings, touch: { ...settings.touch, layout } });
 
   return (
     <section id="gameScreen" className="screen">
       <canvas id="gameCanvas" ref={canvasRef} />
 
-      {profile.settings.showStatsBar && (
-        <HudStatsBar stats={{ ...stats, seasonCoins: profile.seasonCoinsPicked || 0 }} fps={profile.settings.showFps ? (stats.fps || 60) : null} />
+      {settings.showStatsBar && !editing && (
+        <div className="hud-stats-anchor" style={hudStyle(settings.touch.layout, 'stats')}>
+          <HudStatsBar stats={{ ...stats, seasonCoins: profile.seasonCoinsPicked || 0 }} fps={settings.showFps ? (stats.fps || 60) : null} />
+        </div>
       )}
 
-      <nav className="hud-top-actions" aria-label="Game HUD controls">
-        <button className={`hud-square-btn${boardOpen ? ' active' : ''}`} onClick={() => setBoardOpen((v) => !v)} title="Leaderboard">♛</button>
-        <button className="hud-square-btn record" title="Record coming later">🎬</button>
-        <button className="hud-square-btn" title="Mod menu">⚙</button>
-        <button className="hud-square-btn" onClick={() => setPaused(true)} title="Pause">Ⅱ</button>
-      </nav>
+      {!editing && (
+        <nav className="hud-top-actions" style={hudStyle(settings.touch.layout, 'hudGroup')} aria-label="Game HUD controls">
+          <button className={`hud-square-btn${boardOpen ? ' active' : ''}`} onClick={() => setBoardOpen((v) => !v)} title="Leaderboard">♛</button>
+          {settings.showRecordButton && <button className="hud-square-btn record" title="Record coming later">🎬</button>}
+          <button className={`hud-square-btn${modOpen ? ' active' : ''}`} onClick={() => setModOpen((v) => !v)} title="Mod menu">⚙</button>
+          <button className="hud-square-btn" onClick={() => setPaused(true)} title="Pause">Ⅱ</button>
+        </nav>
+      )}
 
-      <HudLeaderboard rows={stats.leaderboard} open={boardOpen} />
-      {profile.settings.showMiniMap && <HudMiniMap playerPos={stats.playerPos} />}
+      {!editing && <HudLeaderboard rows={stats.leaderboard} open={boardOpen} />}
+      {settings.showMiniMap && !editing && <HudMiniMap playerPos={stats.playerPos} />}
 
-      <div className="action-stack">
-        <button id="normalFeedBtn" className="round-btn" onClick={() => s?.eject()}>FEED</button>
-        <button id="feedBtn" className="round-btn" onClick={() => s?.eject()}>MACRO</button>
-        <button id="split4Btn" className="round-btn" onClick={() => s?.split(4)}>×4</button>
-        <button id="split2Btn" className="round-btn" onClick={() => s?.split(2)}>×2</button>
-        <button id="splitBtn" className="round-btn" onClick={() => s?.split(1)}>SPLIT</button>
-      </div>
+      {!editing && !death && (
+        <TouchControls profile={profile} session={s} onEmoji={() => setWheelOpen(true)} />
+      )}
+
+      {wheelOpen && (
+        <EmojiWheel
+          profile={profile}
+          onEmoji={(id) => s?.playEmoji(id)}
+          onEmote={(id) => s?.playEmote(id)}
+          onClose={() => setWheelOpen(false)}
+        />
+      )}
+
+      {modOpen && !editing && (
+        <ModMenu
+          profile={profile}
+          onSettings={setSettings}
+          onAdmin={(action, value) => s?.admin(action, value)}
+          onEditLayout={() => { setModOpen(false); setEditing(true); }}
+          onClose={() => setModOpen(false)}
+        />
+      )}
+
+      {editing && (
+        <LayoutEditor layout={settings.touch.layout} onChange={setLayout} onFinish={() => setEditing(false)} />
+      )}
 
       {paused && !death && (
         <div className="overlay">

@@ -1,5 +1,5 @@
 // Game session: owns the world, camera, input and the animation frame loop.
-import { createWorld } from './world';
+import { createWorld, movePlayerToSafeSpawn } from './world';
 import { createCamera, updateCamera } from './camera';
 import { updateWorld, splitPlayer, ejectMassBurst } from './physics';
 import { render } from './render/scene';
@@ -37,6 +37,9 @@ export function createSession(canvas, profile, onStats) {
   };
 
   const pointer = { x: 0, y: 0, active: false };
+  let usingJoystick = false;
+  let macroHeld = false;
+  let macroTimer = 0;
   let running = true;
   let raf = 0;
   let last = performance.now();
@@ -69,6 +72,7 @@ export function createSession(canvas, profile, onStats) {
   }
 
   const onMove = (e) => {
+    if (usingJoystick) return;
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches?.[0];
     pointer.x = (touch ? touch.clientX : e.clientX) - rect.left;
@@ -103,7 +107,18 @@ export function createSession(canvas, profile, onStats) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
-    if (pointer.active) updateDirection();
+    if (pointer.active && !usingJoystick) updateDirection();
+
+    if (macroHeld && player.cells.length) {
+      macroTimer += dt * 1000;
+      const speed = Math.max(10, Math.min(99, Number(profile.settings?.macroSpeed ?? 50)));
+      const multi = Math.max(1, Math.min(300, Number(profile.settings?.macroMultiplier ?? 4)));
+      while (macroTimer >= speed) {
+        macroTimer -= speed;
+        if (ejectMassBurst(world, player, multi)) playSfx('eject');
+      }
+    } else macroTimer = 0;
+
     updateWorld(world, dt, playSfx);
     updateCamera(cam, player, dt, state.size.w, state.size.h);
     render(ctx, state.size.w, state.size.h, world, cam, opts);
@@ -153,5 +168,33 @@ export function createSession(canvas, profile, onStats) {
     },
     split(times = 1) { doSplit(times); },
     eject() { doFeed(); },
+    setMacro(on) { macroHeld = !!on; if (!on) macroTimer = 0; },
+    setJoystick(dir) {
+      if (!dir) {
+        usingJoystick = false;
+        if (profile.settings?.touch?.stopOnRelease !== false) player.dir = { x: player.lastDir.x, y: player.lastDir.y, mag: 0 };
+        return;
+      }
+      usingJoystick = true;
+      const sens = Math.max(0.4, Math.min(2, Number(profile.settings?.touch?.joystickSensitivity ?? 1)));
+      if (dir.mag > 0.02) player.lastDir = { x: dir.x, y: dir.y };
+      player.dir = { x: dir.x, y: dir.y, mag: Math.max(0, Math.min(1, dir.mag * sens)) };
+    },
+    playEmoji(id) { player.activeEmoji = { id, until: world.time + 2.3 }; },
+    playEmote(id) { player.activeEmote = { id, startedAt: world.time }; },
+    admin(action, value) {
+      const cells = player.cells;
+      if (action === 'setMass' && cells.length) { const each = Math.max(20, value / cells.length); cells.forEach((c) => { c.mass = each; }); }
+      else if (action === 'addMass') cells.forEach((c) => { c.mass += value; });
+      else if (action === 'god') player.modGodMode = !!value;
+      else if (action === 'invisible') player.modInvisible = !!value;
+      else if (action === 'speed') player.modSpeedMultiplier = value;
+      else if (action === 'freezeBots') world.botsFrozen = !!value;
+      else if (action === 'viruses') world.virusSpawningEnabled = !!value;
+      else if (action === 'pellets') world.pelletSpawningEnabled = !!value;
+      else if (action === 'timeScale') world.modTimeScale = value;
+      else if (action === 'killBots') world.players.forEach((p) => { if (p.isBot) p.cells = []; });
+      else if (action === 'respawnSafe') movePlayerToSafeSpawn(world, player);
+    },
   };
 }

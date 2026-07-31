@@ -43,7 +43,7 @@ export default function Play() {
   };
 
   if (playing) {
-    return <GameScreen profile={profile} onExit={() => setPlaying(false)} onMatchEnd={handleMatchEnd} />;
+    return <GameScreen profile={profile} onProfile={commit} onExit={() => setPlaying(false)} onMatchEnd={handleMatchEnd} />;
   }
 
   const mode = findMode(profile.room.modeId);
