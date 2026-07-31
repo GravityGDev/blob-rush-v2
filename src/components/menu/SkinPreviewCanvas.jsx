@@ -19,6 +19,14 @@ export default function SkinPreviewCanvas({ profile, skinId, compact = false, hi
     let raf = 0;
     const frame = (now) => {
       raf = requestAnimationFrame(frame);
+      // Always fit the canvas to its container box so previews never overflow their card.
+      const box = canvas.parentElement?.getBoundingClientRect();
+      if (box && box.width > 10 && box.height > 10) {
+        const w = `${Math.round(box.width)}px`;
+        const h = `${Math.round(box.height)}px`;
+        if (canvas.style.width !== w) canvas.style.width = w;
+        if (canvas.style.height !== h) canvas.style.height = h;
+      }
       const rect = canvas.getBoundingClientRect();
       if (rect.width < 10) return;
       const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -65,5 +73,5 @@ export default function SkinPreviewCanvas({ profile, skinId, compact = false, hi
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  return <canvas ref={ref} className="skin-preview-canvas" aria-label="Live in-game skin preview" />;
+  return <canvas ref={ref} className={`skin-preview-canvas${compact ? ' fill' : ''}`} aria-label="Live in-game skin preview" />;
 }
