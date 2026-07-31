@@ -24,10 +24,11 @@ export default function SkinPreviewCanvas({ profile, skinId, compact = false, hi
       if (box && box.width > 10 && box.height > 10) {
         const w = `${Math.round(box.width)}px`;
         const h = `${Math.round(box.height)}px`;
-        if (canvas.style.width !== w) canvas.style.width = w;
-        if (canvas.style.height !== h) canvas.style.height = h;
+        // setProperty with !important so container CSS can never resize the canvas out of sync.
+        if (canvas.style.width !== w) canvas.style.setProperty('width', w, 'important');
+        if (canvas.style.height !== h) canvas.style.setProperty('height', h, 'important');
       }
-      const rect = canvas.getBoundingClientRect();
+      const rect = box && box.width > 10 && box.height > 10 ? box : canvas.getBoundingClientRect();
       if (rect.width < 10) return;
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       const pw = Math.round(rect.width * dpr);
@@ -45,11 +46,12 @@ export default function SkinPreviewCanvas({ profile, skinId, compact = false, hi
       const radius = radiusFromMass(500);
       const { compact: cmp, hideCell: hide } = modeRef.current;
       // Leave enough headroom so hats, halos and auras stay fully inside the card.
+      const fit = cmp ? (hide ? 2.5 : 3.1) : 0;
       const scale = cmp
-        ? Math.min(rect.width / (radius * 4.4), rect.height / (radius * 4.4))
+        ? Math.min(rect.width / (radius * fit), rect.height / (radius * fit))
         : Math.min(rect.width / (radius * 2.65), rect.height / (radius * 3.35));
       ctx.save();
-      ctx.translate(rect.width * 0.5, rect.height * (cmp ? 0.56 : 0.6));
+      ctx.translate(rect.width * 0.5, rect.height * 0.5);
       ctx.scale(scale, scale);
       if (hide) {
         const cosmeticProfile = { equippedCosmetics: p.equippedCosmetics, cosmeticTransforms: p.cosmeticTransforms, cosmeticPreview: p.cosmeticPreview };
