@@ -9,6 +9,7 @@ import LuckyModal from '@/components/menu/LuckyModal';
 import SettingsModal from '@/components/menu/SettingsModal';
 import ServerModal from '@/components/menu/ServerModal';
 import StaffModal from '@/components/menu/StaffModal';
+import AdminModal from '@/components/menu/AdminModal';
 import GameScreen from '@/components/game/GameScreen';
 import RotateOverlay from '@/components/game/RotateOverlay';
 import '@/styles/blobrush-game.css';
@@ -95,7 +96,8 @@ export default function Play() {
       {modal === 'lucky' && <LuckyModal profile={profile} onProfile={commit} onClose={close} />}
       {modal === 'settings' && <SettingsModal profile={profile} onChange={(settings) => update({ settings })} onClose={close} />}
       {modal === 'server' && <ServerModal profile={profile} onSelect={(room2) => update({ room: room2 })} onClose={close} />}
-      {(modal === 'admin' || modal === 'moderation') && (
+      {modal === 'admin' && <AdminModal profile={profile} onProfile={commit} onClose={close} />}
+      {modal === 'moderation' && (
         <StaffModal mode={modal} profile={profile} onProfile={commit} onClose={close} />
       )}
       <RotateOverlay />
