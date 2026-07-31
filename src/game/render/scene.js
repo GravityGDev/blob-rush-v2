@@ -194,6 +194,9 @@ export function render(ctx, w, h, world, cam, opts) {
     b: cam.y + renderHalfH,
   };
   const renderOpts = { ...opts, screenScale: cam.scale };
+  // Cheap variant for cells that are physically small on screen (mass splits,
+  // distant bots) — no glows, cosmetics or high-poly jelly outlines.
+  const cheapOpts = { ...renderOpts, quality: 'low', showGlows: false, showCosmetics: false };
 
   drawGrid(ctx, view, cam.scale);
   ctx.strokeStyle = 'rgba(255,80,120,0.45)';
@@ -228,12 +231,13 @@ export function render(ctx, w, h, world, cam, opts) {
   const visibleCells = [...playerCells, ...botCells.slice(0, MAX_RENDERED_BOT_CELLS)].map(([p,c]) => [p,c]);
   visibleCells.sort((a, b) => a[1].mass - b[1].mass);
 
-  const showBotTrails = opts.quality === 'high' && opts.detail > 0.78 && cam.scale > 0.14;
+  const playerCellCount = world.player?.cells?.length || 1;
+  const showBotTrails = opts.quality === 'high' && opts.detail > 0.78 && cam.scale > 0.14 && playerCellCount <= 6;
   const playerSpawnIntro = Math.max(0, Number(world.player?.spawnElapsed || 0)) < 1.3;
   if (renderOpts.showGlows !== false) {
     for (const [p, c] of visibleCells) {
       if (p === world.player && playerSpawnIntro) continue;
-      if (p === world.player || showBotTrails) drawTrail(ctx, p, c, world.time);
+      if ((p === world.player && playerCellCount <= 8) || showBotTrails) drawTrail(ctx, p, c, world.time);
     }
   }
 
@@ -243,7 +247,8 @@ export function render(ctx, w, h, world, cam, opts) {
     if (p === world.player && playerSpawnIntro) {
       drawPlayerWithSpawnIntro(ctx, world, p, c, world.time, renderOpts, h, cam.scale);
     } else {
-      drawCell(ctx, p, c, world.time, renderOpts);
+      const screenR = radiusFromMass(c.mass) * cam.scale;
+      drawCell(ctx, p, c, world.time, screenR < 26 ? cheapOpts : renderOpts);
     }
   }
   ctx.restore();
