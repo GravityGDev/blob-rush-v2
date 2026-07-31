@@ -65,7 +65,8 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   const scale = uiScale();
   const groupScale = touch.layout.hudGroup.size * scale;
   const btnSize = Math.round(50 * groupScale);
-  const statsWidth = Math.min(760, Math.max(300, viewport.w * 0.52)) / Math.max(0.5, touch.layout.stats.size * scale);
+  const statCount = settings.showFps === false ? 5 : 6;
+  const statsWidth = statCount * 96;
 
   const showToast = (text) => { setToast(text); setTimeout(() => setToast(''), 1700); };
 
@@ -76,7 +77,7 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
 
       <div id="touchControlLayer">
         {settings.showStatsBar !== false && touch.layout.stats.visible && (
-          <div id="hudStatsBar" className="hud-stats-bar" style={controlStyle(touch, 'stats', statsWidth, 50)}>
+          <div id="hudStatsBar" className="hud-stats-bar" style={{ ...controlStyle(touch, 'stats', statsWidth, 50), maxWidth: 'calc(100vw - 20px)' }}>
             <HudStatsBar
               stats={{ ...stats, seasonCoins: profile.seasonCoinsPicked || 0 }}
               fps={settings.showFps === false ? null : stats.fps}

@@ -85,7 +85,8 @@
 /* ---- Live touch control layer (verbatim from the original build) ---- */
 #touchControlLayer { position:fixed; inset:0; width:100vw; height:100dvh; z-index:70; pointer-events:none; overflow:visible; }
 #touchControlLayer > button, #touchControlLayer #hudTopActions { pointer-events:auto; }
-#touchControlLayer #hudStatsBar { position:absolute; z-index:43; pointer-events:none; }
+#touchControlLayer #hudStatsBar { position:absolute; z-index:43; pointer-events:none; overflow:hidden; }
+#touchControlLayer #hudStatsBar .hud-stat { min-width:0; }
 #touchControlLayer #hudTopActions { position:absolute; display:flex; align-items:center; justify-content:flex-start; width:auto; z-index:66; }
 #touchControlLayer #hudTopActions .hud-square-btn { position:relative; flex:0 0 auto; }
 
