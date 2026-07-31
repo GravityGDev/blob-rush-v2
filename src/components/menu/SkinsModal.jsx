@@ -81,7 +81,6 @@ export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
               onClick={() => setPreviewId(skin.id)}
               onPointerEnter={() => setPreviewId(skin.id)}
             >
-              <span className="skin-rarity" style={{ background: rarityColor(skin.rarity) }}>{skin.rarity}</span>
               <span className={`skin-swatch ${skinPreviewClass(skin)}`} style={{ background: skinBackground(skin), borderColor: skin.accent }} />
               <span className="skin-name">{skin.name}</span>
               <small className={skin.reactive ? 'reactive' : skin.animated ? 'animated' : 'static'}>

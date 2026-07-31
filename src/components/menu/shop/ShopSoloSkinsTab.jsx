@@ -20,7 +20,6 @@ export default function ShopSoloSkinsTab({ profile, onBuySkin }) {
               <span className="shop-feature-pill">{skin.rarity || 'Premium'}</span>
               {skin.limited && <span className="shop-feature-pill shop-feature-pill--limited">Limited</span>}
               <span className="shop-feature-pill">{skin.reactive ? 'Reactive' : 'Animated'}</span>
-              <span className="shop-feature-pill">Solo purchase</span>
             </div>
             <div className="shop-card-bottom">
               <span className="shop-price">🪙 {skin.price}</span>

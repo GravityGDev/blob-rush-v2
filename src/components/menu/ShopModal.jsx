@@ -6,6 +6,7 @@ import ShopSoloSkinsTab from './shop/ShopSoloSkinsTab';
 import ShopBoostersTab from './shop/ShopBoostersTab';
 import ShopCosmeticsTab from './shop/ShopCosmeticsTab';
 import ShopSocialTab from './shop/ShopSocialTab';
+import ShopCodesTab from './shop/ShopCodesTab';
 import {
   buySingleSkin, buyCosmetic, equipCosmetic,
   buySocial, toggleFavoriteSocial, buyBooster, redeemCode,
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'boosters', label: 'Boosters' },
   { id: 'cosmetics', label: 'Cosmetics' },
   { id: 'social', label: 'Emojis & Emotes' },
+  { id: 'codes', label: 'Codes' },
 ];
 const COSMETIC_CATS = [
   { id: 'all', label: 'All' },
@@ -81,7 +83,6 @@ export default function ShopModal({ profile, onProfile, onClose }) {
           profile={profile}
           onBuySkin={(id) => run(buySingleSkin(profile, id))}
           onBuyCosmetic={(id) => run(buyCosmetic(profile, id))}
-          onRedeem={(code) => run(redeemCode(profile, code))}
           onOpenTab={setTab}
         />
       )}
@@ -95,6 +96,7 @@ export default function ShopModal({ profile, onProfile, onClose }) {
           onEquip={(id) => run(equipCosmetic(profile, id))}
         />
       )}
+      {tab === 'codes' && <ShopCodesTab onRedeem={(code) => run(redeemCode(profile, code))} />}
       {tab === 'social' && (
         <ShopSocialTab
           profile={profile}
