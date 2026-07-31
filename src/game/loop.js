@@ -1,0 +1,149 @@
+// Game session: owns the world, camera, input and the animation frame loop.
+import { createWorld } from './world';
+import { createCamera, updateCamera } from './camera';
+import { updateWorld, splitPlayer, ejectMassBurst } from './physics';
+import { render } from './render/scene';
+import { playSfx, setSfxVolume } from './audio';
+import { state } from './state';
+import { START_MASS } from './constants';
+
+export function createSession(canvas, profile, onStats) {
+  const ctx = canvas.getContext('2d');
+  const world = createWorld(profile.nickname || 'Blob', profile.skin, {
+    startMass: START_MASS,
+    equippedCosmetics: profile.equippedCosmetics,
+    cosmeticTransforms: profile.cosmeticTransforms,
+    equippedBadge: profile.equippedBadge,
+  });
+  const cam = createCamera();
+  const player = world.player;
+  const centre = player.cells[0];
+  cam.x = centre.x;
+  cam.y = centre.y;
+
+  state.profile = profile;
+  state.world = world;
+  state.camera = cam;
+  setSfxVolume(Number(profile.settings?.sfx ?? 0.8));
+
+  const settings = profile.settings || {};
+  const opts = {
+    quality: settings.quality || 'high',
+    detail: 1,
+    showCosmetics: settings.showCosmetics !== false,
+    showGlows: settings.showGlows !== false,
+    animateSkins: settings.animateSkins !== false,
+  };
+
+  const pointer = { x: 0, y: 0, active: false };
+  let running = true;
+  let raf = 0;
+  let last = performance.now();
+  let statsTick = 0;
+
+  function resize() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = canvas.clientWidth || window.innerWidth;
+    const h = canvas.clientHeight || window.innerHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    state.size = { w, h, dpr };
+  }
+  resize();
+
+  function updateDirection() {
+    const { w, h } = state.size;
+    const dx = pointer.x - w / 2;
+    const dy = pointer.y - h / 2;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 12) {
+      player.dir = { x: player.lastDir.x, y: player.lastDir.y, mag: 0 };
+      return;
+    }
+    const nx = dx / dist;
+    const ny = dy / dist;
+    player.lastDir = { x: nx, y: ny };
+    player.dir = { x: nx, y: ny, mag: Math.min(1, dist / (Math.min(w, h) * 0.42)) };
+  }
+
+  const onMove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches?.[0];
+    pointer.x = (touch ? touch.clientX : e.clientX) - rect.left;
+    pointer.y = (touch ? touch.clientY : e.clientY) - rect.top;
+    pointer.active = true;
+  };
+  const onKey = (e) => {
+    if (!player.cells.length) return;
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (splitPlayer(player)) playSfx('split');
+    } else if (e.code === 'KeyW') {
+      e.preventDefault();
+      if (ejectMassBurst(world, player, 1)) playSfx('eject');
+    }
+  };
+
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: true });
+  window.addEventListener('touchstart', onMove, { passive: true });
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('resize', resize);
+
+  function frame(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    if (pointer.active) updateDirection();
+    updateWorld(world, dt, playSfx);
+    updateCamera(cam, player, dt, state.size.w, state.size.h);
+    render(ctx, state.size.w, state.size.h, world, cam, opts);
+
+    const mass = player.cells.reduce((sum, c) => sum + c.mass, 0);
+    state.stats.lastMass = mass;
+    state.stats.maxMass = Math.max(state.stats.maxMass, mass);
+
+    statsTick += dt;
+    if (statsTick > 0.25) {
+      statsTick = 0;
+      const board = world.players
+        .map((p) => ({ id: p.id, name: p.name, mass: p.cells.reduce((s, c) => s + c.mass, 0), isPlayer: p === player }))
+        .filter((entry) => entry.mass > 0)
+        .sort((a, b) => b.mass - a.mass);
+      const rank = board.findIndex((entry) => entry.isPlayer) + 1;
+      if (rank > 0) state.stats.bestRank = Math.min(state.stats.bestRank, rank);
+      onStats({
+        mass: Math.round(mass),
+        cells: player.cells.length,
+        kills: player.kills || 0,
+        rank: rank || board.length + 1,
+        leaderboard: board.slice(0, 10),
+        alive: player.cells.length > 0,
+        playerPos: player.cells[0] ? { x: player.cells[0].x, y: player.cells[0].y } : null,
+        blobs: board.length,
+      });
+    }
+
+    raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+
+  return {
+    world,
+    destroy() {
+      running = false;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchstart', onMove);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', resize);
+      state.world = null;
+      state.camera = null;
+    },
+    split() { if (splitPlayer(player)) playSfx('split'); },
+    eject() { if (ejectMassBurst(world, player, 1)) playSfx('eject'); },
+  };
+}
