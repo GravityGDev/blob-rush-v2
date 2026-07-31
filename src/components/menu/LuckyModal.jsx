@@ -20,7 +20,7 @@ export default function LuckyModal({ profile, onProfile, onClose }) {
     <ModalShell
       title="Am I Lucky?"
       onClose={onClose}
-      className="shop-modal"
+      className="shop-modal lucky-modal"
       extraHead={<span className="shop-balance">🪙 {profile.coins.toLocaleString()} <span className="tokens">🎟️ {profile.tokens}</span></span>}
       beforeBody={(
         <div className="shop-nav">

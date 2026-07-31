@@ -71,6 +71,7 @@ export default function LuckyWheelTab({ profile, onProfile, onNote }) {
       </aside>
 
       <div className="lk-wheel-stage">
+        <div className="lk-wheel-box">
         <span className="lk-wheel-pointer">📍</span>
         <svg
           viewBox="0 0 260 260"
@@ -93,6 +94,7 @@ export default function LuckyWheelTab({ profile, onProfile, onNote }) {
         <button className="lk-wheel-hub" disabled={spinning || profile.tokens < 1} onClick={spin} aria-label="Spin the wheel">
           {spinning ? '…' : '▶'}
         </button>
+        </div>
       </div>
     </div>
   );
