@@ -15,7 +15,7 @@ export const DEFAULT_TOUCH_LAYOUT = {
   feed: { x:0.89, y:0.86, size:1, visible:true },
   normalFeed: { x:0.78, y:0.87, size:0.96, visible:true },
   stats: { x:0.39, y:0.073, size:1, visible:true },
-  hudGroup: { x:0.86, y:0.073, size:1, visible:true },
+  hudGroup: { x:0.80, y:0.073, size:1, visible:true },
   emoji: { x:0.50, y:0.92, size:1, visible:true },
 };
 export const DEFAULT_TOUCH_SETTINGS = {

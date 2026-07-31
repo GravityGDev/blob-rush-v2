@@ -70,7 +70,7 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   const showToast = (text) => { setToast(text); setTimeout(() => setToast(''), 1700); };
 
   return (
-    <section id="gameScreen" className={`screen${death ? ' death-ui-hidden' : ''}`}>
+    <section id="gameScreen" className={`screen${death || paused ? ' death-ui-hidden' : ''}`}>
       <canvas id="gameCanvas" ref={canvasRef} />
       <div id="aimReticle" className="aim-reticle centered" ref={(el) => { state.reticleEl = el; }} aria-hidden="true" />
 
@@ -99,7 +99,7 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
           </nav>
         )}
 
-        {!death && <TouchControls profile={profile} session={s} onEmoji={() => { setWheelOpen(true); playSfx('button'); }} />}
+        {!death && !paused && <TouchControls profile={profile} session={s} onEmoji={() => { setWheelOpen(true); playSfx('button'); }} />}
       </div>
 
       <HudLeaderboard rows={stats.leaderboard} selfRank={stats.selfRank} selfName={stats.selfName} open={boardOpen} />

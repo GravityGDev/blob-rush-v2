@@ -64,12 +64,19 @@ export function touchActualPoint(item, touch) {
 export function controlStyle(touch, key, baseW, baseH = baseW) {
   const point = touchActualPoint(touch.layout[key], touch);
   const s = uiScale();
+  const w = baseW * point.size * s;
+  const h = baseH * point.size * s;
+  const vw = typeof window === 'undefined' ? 1024 : window.innerWidth;
+  const vh = typeof window === 'undefined' ? 640 : window.innerHeight;
+  // Keep controls fully on screen whatever the saved layout says.
+  const left = clamp(point.x * vw, Math.min(vw / 2, w / 2 + 6), Math.max(vw / 2, vw - w / 2 - 6));
+  const top = clamp(point.y * vh, Math.min(vh / 2, h / 2 + 6), Math.max(vh / 2, vh - h / 2 - 6));
   return {
     position: 'absolute',
-    left: `${point.x * 100}%`,
-    top: `${point.y * 100}%`,
-    width: `${baseW * point.size * s}px`,
-    height: `${baseH * point.size * s}px`,
+    left: `${left}px`,
+    top: `${top}px`,
+    width: `${w}px`,
+    height: `${h}px`,
     transform: 'translate(-50%,-50%)',
   };
 }
