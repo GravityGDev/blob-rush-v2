@@ -9,6 +9,8 @@ import SettingsModal from '@/components/menu/SettingsModal';
 import ServerModal from '@/components/menu/ServerModal';
 import StaffModal from '@/components/menu/StaffModal';
 import GameScreen from '@/components/game/GameScreen';
+import RotateOverlay from '@/components/game/RotateOverlay';
+import '@/styles/blobrush-game.css';
 import { loadProfile, saveProfile, addXp, xpForLevel } from '@/game/save';
 import { addSeasonProgress, boosterActive } from '@/game/progression';
 import { findMode, findRoom } from '@/game/rooms';
@@ -43,7 +45,12 @@ export default function Play() {
   };
 
   if (playing) {
-    return <GameScreen profile={profile} onProfile={commit} onExit={() => setPlaying(false)} onMatchEnd={handleMatchEnd} />;
+    return (
+      <>
+        <GameScreen profile={profile} onProfile={commit} onExit={() => setPlaying(false)} onMatchEnd={handleMatchEnd} />
+        <RotateOverlay />
+      </>
+    );
   }
 
   const mode = findMode(profile.room.modeId);
@@ -70,6 +77,7 @@ export default function Play() {
       {(modal === 'admin' || modal === 'moderation') && (
         <StaffModal mode={modal} profile={profile} onProfile={commit} onClose={close} />
       )}
+      <RotateOverlay />
     </>
   );
 }

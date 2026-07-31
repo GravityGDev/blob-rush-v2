@@ -68,6 +68,7 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   return (
     <section id="gameScreen" className={`screen${death ? ' death-ui-hidden' : ''}`}>
       <canvas id="gameCanvas" ref={canvasRef} />
+      <div id="aimReticle" className="aim-reticle centered" ref={(el) => { state.reticleEl = el; }} aria-hidden="true" />
 
       <div id="touchControlLayer">
         {settings.showStatsBar !== false && touch.layout.stats.visible && (

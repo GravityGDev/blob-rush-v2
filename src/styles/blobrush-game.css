@@ -66,6 +66,22 @@
 .rewards span:first-child { color:#fcd34d; }
 .rewards span:nth-child(2) { color:#7dd3fc; }
 
+/* ---- Aim reticle (verbatim) ---- */
+.aim-reticle { --aim-angle:0rad; position:absolute; z-index:22; width:20px; height:20px; transform:translate(-50%,-50%) rotate(var(--aim-angle)); border:1.5px solid rgba(251,113,133,.82); border-radius:50%; pointer-events:none; filter:drop-shadow(0 0 6px rgba(251,113,133,.7)); transition:width .1s,height .1s,border-color .1s,filter .1s; transform-origin:center; }
+.aim-reticle::before { content:""; position:absolute; left:50%; top:50%; width:24px; height:2px; border-radius:999px; background:linear-gradient(90deg,rgba(255,255,255,.38),rgba(255,255,255,.98)); transform:translate(0,-50%); box-shadow:0 0 5px rgba(255,255,255,.5); }
+.aim-reticle::after { content:""; position:absolute; left:calc(50% + 21px); top:50%; width:0; height:0; border-top:4px solid transparent; border-bottom:4px solid transparent; border-left:7px solid rgba(255,255,255,.98); transform:translateY(-50%); filter:drop-shadow(0 0 3px rgba(255,255,255,.7)); }
+.aim-reticle.centered { width:16px; height:16px; border-color:rgba(74,222,128,.88); filter:drop-shadow(0 0 6px rgba(74,222,128,.72)); }
+.aim-reticle.centered::before,.aim-reticle.centered::after { opacity:.38; }
+
+/* ---- Rotate to landscape overlay (verbatim) ---- */
+#rotateOverlay { display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; padding:28px; text-align:center; background:radial-gradient(circle at 50% 35%,rgba(56,189,248,.18),transparent 35%),#080c18; }
+.rotate-card { width:min(100%,360px); padding:30px 24px; border:1px solid rgba(255,255,255,.11); border-radius:26px; background:rgba(15,23,42,.97); box-shadow:0 24px 70px rgba(0,0,0,.45); }
+.rotate-phone { display:inline-block; font-size:58px; animation:rotatePhone 1.8s ease-in-out infinite; }
+.rotate-card h2 { margin:14px 0 8px; }
+.rotate-card p { margin:0; color:rgba(255,255,255,.58); line-height:1.5; }
+@keyframes rotatePhone { 0%,25%{transform:rotate(0deg)} 70%,100%{transform:rotate(90deg)} }
+@media (orientation:portrait) and (max-width:900px) { #rotateOverlay { display:flex; } }
+
 /* ---- Live touch control layer (verbatim from the original build) ---- */
 #touchControlLayer { position:fixed; inset:0; width:100vw; height:100dvh; z-index:70; pointer-events:none; overflow:visible; }
 #touchControlLayer > button, #touchControlLayer #hudTopActions { pointer-events:auto; }

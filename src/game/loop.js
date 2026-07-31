@@ -161,24 +161,17 @@ export function createSession(canvas, profile, onStats) {
       animateSkins: visual.animateSkins !== false,
     });
 
-    if (visual.showReticle !== false && !dead && player.cells.length) {
-      const t = cursorWorldTarget(player);
-      const sx = (t.x - cam.x) * cam.scale + state.size.w / 2;
-      const sy = (t.y - cam.y) * cam.scale + state.size.h / 2;
-      const dpr = state.size.dpr;
-      ctx.save();
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.globalAlpha = 0.75;
-      ctx.strokeStyle = 'rgba(255,255,255,.85)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(sx, sy, 11, 0, Math.PI * 2);
-      ctx.moveTo(sx - 18, sy); ctx.lineTo(sx - 5, sy);
-      ctx.moveTo(sx + 5, sy); ctx.lineTo(sx + 18, sy);
-      ctx.moveTo(sx, sy - 18); ctx.lineTo(sx, sy - 5);
-      ctx.moveTo(sx, sy + 5); ctx.lineTo(sx, sy + 18);
-      ctx.stroke();
-      ctx.restore();
+    const reticle = state.reticleEl;
+    if (reticle) {
+      const show = visual.showReticle !== false && !dead && player.cells.length > 0;
+      reticle.style.display = show ? 'block' : 'none';
+      if (show) {
+        const t = cursorWorldTarget(player);
+        reticle.style.left = `${(t.x - cam.x) * cam.scale + state.size.w / 2}px`;
+        reticle.style.top = `${(t.y - cam.y) * cam.scale + state.size.h / 2}px`;
+        reticle.style.setProperty('--aim-angle', `${Math.atan2(player.dir?.y || 0, player.dir?.x || 1)}rad`);
+        reticle.classList.toggle('centered', (player.dir?.mag || 0) <= 0.08);
+      }
     }
 
     fpsFrames += 1;
