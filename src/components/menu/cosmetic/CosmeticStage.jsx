@@ -26,22 +26,62 @@ export default function CosmeticStage({ previewProfile, skinId, draft, onDraft, 
   // Same projection the preview canvas uses, so the box lines up with the drawn cosmetic.
   const unit = Math.min(box.w / (R * 2.65), box.h / (R * 3.35)) * R;
   const cx = box.w * 0.5;
-  const cy = box.h * 0.6;
+  const cy = box.h * 0.5;
   const size = Math.max(24, unit * 1.35 * Number(draft.scale || 1));
   const left = cx + (Number(draft.x || 0) / 100) * unit;
   const top = cy + (Number(draft.y || 0) / 100) * unit;
 
   const toUnits = (px) => (px / (unit || 1)) * 100;
 
+  // Two-finger pinch / twist directly on the selection box.
+  const boxPointers = useRef(new Map());
+  const gesture = useRef(null);
+
   const onPointerDown = (mode) => (e) => {
     e.stopPropagation();
     e.currentTarget.setPointerCapture?.(e.pointerId);
+    if (mode === 'move') {
+      boxPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (boxPointers.current.size === 2) {
+        const [a, b] = [...boxPointers.current.values()];
+        gesture.current = {
+          dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+          angle: Math.atan2(a.y - b.y, a.x - b.x) * 180 / Math.PI,
+          start: { ...draft },
+        };
+        drag.current = null;
+        return;
+      }
+    }
     drag.current = { mode, sx: e.clientX, sy: e.clientY, start: { ...draft } };
+  };
+
+  const onBoxPointerMove = (e) => {
+    if (!boxPointers.current.has(e.pointerId)) return;
+    boxPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const g = gesture.current;
+    if (!g || boxPointers.current.size < 2) return;
+    e.stopPropagation();
+    const [a, b] = [...boxPointers.current.values()];
+    const dist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+    const angle = Math.atan2(a.y - b.y, a.x - b.x) * 180 / Math.PI;
+    let delta = angle - g.angle;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    onDraft({
+      scale: clamp(g.start.scale * (dist / g.dist), 0.35, 2.2),
+      rotation: clamp(Math.round((g.start.rotation || 0) + delta), -180, 180),
+    });
+  };
+
+  const onBoxPointerUp = (e) => {
+    boxPointers.current.delete(e.pointerId);
+    if (boxPointers.current.size < 2) gesture.current = null;
   };
 
   const onPointerMove = (e) => {
     const d = drag.current;
-    if (!d) return;
+    if (!d || gesture.current) return;
     const dx = (e.clientX - d.sx) / zoom;
     const dy = (e.clientY - d.sy) / zoom;
     if (d.mode === 'move') {
@@ -99,6 +139,9 @@ export default function CosmeticStage({ previewProfile, skinId, draft, onDraft, 
             className="cosmetic-direct-overlay active"
             style={{ left, top, width: size, height: size, transform: `translate(-50%,-50%) rotate(${draft.rotation || 0}deg)` }}
             onPointerDown={onPointerDown('move')}
+            onPointerMove={onBoxPointerMove}
+            onPointerUp={onBoxPointerUp}
+            onPointerCancel={onBoxPointerUp}
           >
             <span className="cosmetic-direct-move">✥</span>
             <button className="cosmetic-direct-handle rotate" onPointerDown={onPointerDown('rotate')}>↻</button>
@@ -107,7 +150,7 @@ export default function CosmeticStage({ previewProfile, skinId, draft, onDraft, 
         )}
       </div>
 
-      <div className="cosmetic-fs-tip">Drag to move • Pinch with two fingers to zoom • Yellow resizes • Blue rotates • Use panel buttons for front / behind</div>
+      <div className="cosmetic-fs-tip">Drag to move • Pinch/twist on the box to scale &amp; rotate • Yellow resizes • Blue rotates • Pinch outside the box to zoom</div>
     </div>
   );
 }
