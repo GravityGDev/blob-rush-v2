@@ -17,7 +17,16 @@ export default function SkinPreviewCanvas({ profile, skinId, compact = false, hi
     const ctx = canvas.getContext('2d');
     const cell = { id: -88, x: 0, y: 0, mass: 500, mx: 0, my: 0, vx: 0, vy: 0 };
     let raf = 0;
+    // Only animate previews that are actually scrolled into view.
+    let visible = true;
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible && !raf) raf = requestAnimationFrame(frame);
+    }, { rootMargin: '120px' });
+    io.observe(canvas);
+
     const frame = (now) => {
+      if (!visible) { raf = 0; return; }
       raf = requestAnimationFrame(frame);
       // Always fit the canvas to its container box so previews never overflow their card.
       const box = canvas.parentElement?.getBoundingClientRect();
@@ -73,7 +82,7 @@ export default function SkinPreviewCanvas({ profile, skinId, compact = false, hi
       ctx.restore();
     };
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    return () => { io.disconnect(); cancelAnimationFrame(raf); };
   }, []);
 
   return <canvas ref={ref} className={`skin-preview-canvas${compact ? ' fill' : ''}`} aria-label="Live in-game skin preview" />;

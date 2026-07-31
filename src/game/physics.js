@@ -11,8 +11,26 @@ import { SPAWN_PROTECTION_DURATION } from './constants';
 import { clamp } from './utils';
 import { state } from './state';
 
+// Bots far outside the local player's view get cheap AI updates: they still
+// move, but they skip the expensive per-frame threat/prey scan.
+function makeViewBounds() {
+  const cam = state.camera;
+  const size = state.size;
+  if (!cam || !size || !(cam.scale > 0)) return null;
+  const halfW = size.w / 2 / cam.scale;
+  const halfH = size.h / 2 / cam.scale;
+  const margin = Math.max(halfW, halfH) * 0.6 + 900;
+  return { x: cam.x, y: cam.y, hw: halfW + margin, hh: halfH + margin };
+}
+
+function isOffScreen(view, cell) {
+  if (!view || !cell) return false;
+  return Math.abs(cell.x - view.x) > view.hw || Math.abs(cell.y - view.y) > view.hh;
+}
+
 export function updateWorld(world, dt, sfx) {
   world.time += dt;
+  const view = makeViewBounds();
   const totalCellCount = world.players.reduce((sum, player) => sum + player.cells.length, 0);
   world.performancePressure = totalCellCount > 150 || world.ejected.length > 1900;
   for (const p of world.players) {
@@ -35,7 +53,7 @@ export function updateWorld(world, dt, sfx) {
     if (p.isBot && world.botsFrozen) {
       p.dir = { x:0, y:0, mag:0 };
       for (const c of p.cells) { c.mx *= Math.exp(-dt * 8); c.my *= Math.exp(-dt * 8); c.vx *= Math.exp(-dt * 8); c.vy *= Math.exp(-dt * 8); }
-    } else if (p.isBot) updateBot(world, p, dt);
+    } else if (p.isBot) updateBot(world, p, dt, isOffScreen(view, p.cells[0]));
     moveCells(p, dt, world.performancePressure);
     resolveOwnCells(p, dt);
   }
@@ -752,11 +770,23 @@ export function ejectMass(world, p) {
   return ejectMassBurst(world, p, 1);
 }
 
-function updateBot(world, p, dt) {
+function updateBot(world, p, dt, offScreen = false) {
   p.ai.t -= dt;
   const c = p.cells.reduce((m, x) => (x.mass > m.mass ? x : m), p.cells[0]);
   if (p.ai.t <= 0) {
-    p.ai.t = 0.35 + Math.random() * 0.35;
+    p.ai.t = offScreen ? 1.6 + Math.random() * 1.4 : 0.35 + Math.random() * 0.35;
+    if (offScreen) {
+      // Cheap wander for bots the player cannot see.
+      if (Math.hypot(p.ai.tx - c.x, p.ai.ty - c.y) < 200) {
+        p.ai.tx = clamp(c.x + (Math.random() - 0.5) * 2600, 100, WORLD_SIZE - 100);
+        p.ai.ty = clamp(c.y + (Math.random() - 0.5) * 2600, 100, WORLD_SIZE - 100);
+      }
+      const wdx = p.ai.tx - c.x;
+      const wdy = p.ai.ty - c.y;
+      const wdd = Math.hypot(wdx, wdy) || 1;
+      p.dir = { x: wdx / wdd, y: wdy / wdd, mag: Math.min(1, wdd / 80) };
+      return;
+    }
     let threat = null;
     let prey = null;
     let tD = 1e9;
