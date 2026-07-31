@@ -16,11 +16,6 @@ if (!SECRET) {
 // Room ids must match the ones the app sends (see src/game/rooms.js).
 const ROOM_DEFS = [
   { id: 'ffa-8080', modeId: 'ffa', label: '#8080', region: 'EU West' },
-  { id: 'ffa-8081', modeId: 'ffa', label: '#8081', region: 'EU West' },
-  { id: 'i22-8090', modeId: 'instant22', label: '#8090', region: 'EU West' },
-  { id: 'i50-8100', modeId: 'instant50', label: '#8100', region: 'EU West' },
-  { id: 'duel-8110', modeId: 'duel', label: '#8110', region: 'EU West' },
-  { id: 'power-8120', modeId: 'powers', label: '#8120', region: 'EU West' },
 ];
 
 const rooms = new Map(ROOM_DEFS.map((def) => [def.id, createRoom(def)]));
