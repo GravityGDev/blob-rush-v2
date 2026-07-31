@@ -25,33 +25,32 @@ export default function SkinCosmeticsPanel({ profile, onProfile, onSelect }) {
   };
 
   if (!owned.length) {
-    return <div className="cos-empty">You do not own any cosmetics yet. Buy hats and overlays in the Shop.</div>;
+    return <div className="cosmetics-empty">You do not own any cosmetics yet. Buy hats and overlays in the Shop.</div>;
   }
 
   return (
     <div className="cosmetics-editor">
-      {SECTIONS.map((sec) => {
-        const list = owned.filter((i) => i.slot === sec.slot);
-        if (!list.length) return null;
-        return (
-          <div key={sec.slot} className="cos-section">
-            <h3>{sec.title}</h3>
-            <p>{sec.note}</p>
-            <div className="cos-card-grid">
-              {list.map((item) => {
-                const equipped = profile.equippedCosmetics?.[item.slot] === item.id;
-                return (
-                  <button key={item.id} type="button" className={`cos-card${equipped ? ' selected' : ''}`} onClick={() => toggle(item)}>
-                    <span className="cos-card-icon">{item.icon}</span>
-                    <span className="cos-card-name">{item.name}</span>
-                    {equipped && <span className="cos-card-badge">Equipped</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
+      <div className="cosmetics-owned-grid">
+        {SECTIONS.map((sec) => {
+          const list = owned.filter((i) => i.slot === sec.slot);
+          if (!list.length) return null;
+          return [
+            <div key={`${sec.slot}-head`} className="cosmetics-section-head">
+              <b>{sec.title}</b><i className="cosmetics-section-line" />
+            </div>,
+            <div key={`${sec.slot}-note`} className="cosmetics-slot-note">{sec.note}</div>,
+            ...list.map((item) => {
+              const equipped = profile.equippedCosmetics?.[item.slot] === item.id;
+              return (
+                <button key={item.id} type="button" className={`cosmetic-card${equipped ? ' active equipped' : ''}`} onClick={() => toggle(item)}>
+                  <span className="cosmetic-icon">{item.icon}</span>
+                  <span className="cosmetic-name">{item.name}</span>
+                </button>
+              );
+            }),
+          ];
+        })}
+      </div>
     </div>
   );
 }

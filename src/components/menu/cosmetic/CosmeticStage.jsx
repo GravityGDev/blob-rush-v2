@@ -6,7 +6,7 @@ const R = radiusFromMass(500);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // Interactive editing stage: drag to move, yellow handle resizes, blue handle rotates, pinch zooms.
-export default function CosmeticStage({ previewProfile, skinId, draft, onDraft }) {
+export default function CosmeticStage({ previewProfile, skinId, draft, onDraft, hasItem }) {
   const wrapRef = useRef(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [zoom, setZoom] = useState(1);
@@ -80,32 +80,34 @@ export default function CosmeticStage({ previewProfile, skinId, draft, onDraft }
 
   return (
     <div
-      className="cos-stage"
+      className="cosmetic-fs-stage"
       onPointerDown={stageDown}
       onPointerMove={stageMove}
       onPointerUp={stageUp}
       onPointerCancel={stageUp}
       onWheel={(e) => setZoom((z) => clamp(z - e.deltaY / 900, 0.6, 3))}
     >
-      <div className="cos-zoom-chip">
+      <div className="cosmetic-fs-view-tools">
         <span>Preview {Math.round(zoom * 100)}%</span>
         <button onClick={() => setZoom(1)}>Reset zoom</button>
       </div>
 
-      <div className="cos-stage-inner" ref={wrapRef} style={{ transform: `scale(${zoom})` }}>
+      <div className="cosmetic-fs-stage-inner" ref={wrapRef} style={{ transform: `scale(${zoom})` }}>
         <SkinPreviewCanvas profile={previewProfile} skinId={skinId} />
-        <div
-          className="cos-select-box"
-          style={{ left, top, width: size, height: size, transform: `translate(-50%,-50%) rotate(${draft.rotation || 0}deg)` }}
-          onPointerDown={onPointerDown('move')}
-        >
-          <span className="cos-move-dot">✥</span>
-          <button className="cos-handle rotate" onPointerDown={onPointerDown('rotate')}>↻</button>
-          <button className="cos-handle scale" onPointerDown={onPointerDown('scale')}>⤡</button>
-        </div>
+        {hasItem && (
+          <div
+            className="cosmetic-direct-overlay active"
+            style={{ left, top, width: size, height: size, transform: `translate(-50%,-50%) rotate(${draft.rotation || 0}deg)` }}
+            onPointerDown={onPointerDown('move')}
+          >
+            <span className="cosmetic-direct-move">✥</span>
+            <button className="cosmetic-direct-handle rotate" onPointerDown={onPointerDown('rotate')}>↻</button>
+            <button className="cosmetic-direct-handle resize" onPointerDown={onPointerDown('scale')}>⤡</button>
+          </div>
+        )}
       </div>
 
-      <div className="cos-stage-hint">Drag to move • Pinch with two fingers to zoom • Yellow resizes • Blue rotates • Use panel buttons for front / behind</div>
+      <div className="cosmetic-fs-tip">Drag to move • Pinch with two fingers to zoom • Yellow resizes • Blue rotates • Use panel buttons for front / behind</div>
     </div>
   );
 }

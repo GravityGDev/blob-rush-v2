@@ -91,6 +91,36 @@
 .stat-box b { font-size:clamp(24px,4vw,36px); line-height:1.05; }
 .stat-box span { color:rgba(255,255,255,.42); font-size:clamp(9px,1.6vw,13px); text-transform:uppercase; letter-spacing:.09em; text-align:center; }
 
+@media (orientation:landscape) and (max-height:700px) {
+  .skin-preview-stage { min-height:132px; }
+  .skin-preview-canvas { width:min(100%,180px); }
+  .skin-preview-panel { gap:9px; padding:12px; }
+  .skin-preview-name { font-size:24px; }
+  .skin-preview-status { margin-top:4px; gap:5px; }
+  .skin-card { min-height:136px; padding:9px 6px 32px; }
+  .skin-swatch { width:58px; height:58px; }
+}
+@media (orientation:landscape) and (max-height:760px) {
+  .skins-layout { grid-template-columns:minmax(210px,29%) minmax(0,1fr); gap:9px; }
+  .skins-layout .skin-preview-panel { padding:9px; gap:7px; border-radius:16px; }
+  .skins-layout .skin-preview-stage { min-height:156px; border-radius:14px; }
+  .skins-layout .skin-preview-canvas { width:min(100%,190px); border-radius:13px; }
+  .skins-layout .skin-preview-rarity { font-size:8px; padding:3px 7px; }
+  .skins-layout .skin-preview-name { font-size:20px; }
+  .skins-layout .skin-preview-type { font-size:10px; margin-top:3px; line-height:1.25; }
+  .skins-layout .skin-preview-status { gap:4px; margin-top:4px; }
+  .skins-layout .skin-preview-pill { padding:4px 7px; font-size:9px; }
+  .skins-layout .skin-equip-btn, .skins-layout .cosmetic-fullscreen-launch { padding:7px 10px; border-radius:10px; font-size:10px; }
+  .skins-layout .shop-top { font-size:11px; margin-bottom:6px; }
+  .skins-layout .shop-message { min-height:14px; margin-bottom:5px; font-size:10px; }
+  .skins-layout .skin-filter-row { gap:5px; margin-bottom:6px; }
+  .skins-layout .skin-filter-btn { padding:5px 9px; font-size:10px; }
+  .skins-layout .skins-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
+  .skins-layout .skin-card { min-height:108px; padding:7px 5px 30px; gap:6px; border-radius:13px; }
+  .skins-layout .skin-swatch { width:46px; height:46px; border-width:4px; }
+  .skins-layout .skin-card > span.skin-name { font-size:12px; line-height:1.05; }
+}
+
 @media (orientation:landscape) and (max-width:900px) {
   .profile-layout { grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); }
   .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }

@@ -51,7 +51,7 @@ export default function SkinsModal({ profile, onEquip, onProfile, onClose }) {
           </div>
         </div>
         {isCosmetics && (
-          <button className="cos-edit-fullscreen" onClick={() => setEditorOpen(true)}>⛶ Edit Cosmetics Full Screen</button>
+          <button className="cosmetic-fullscreen-launch" onClick={() => setEditorOpen(true)}>⛶ Edit Cosmetics Full Screen</button>
         )}
         <button className="skin-equip-btn" hidden={isCosmetics || isBadges} disabled={equipped || !owned} onClick={() => onEquip(preview.id)}>
           {equipped ? 'Equipped' : owned ? 'Equip' : 'Locked'}

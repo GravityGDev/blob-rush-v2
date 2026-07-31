@@ -8,7 +8,7 @@ const SECTIONS = [
   { slot: 'overlay', title: 'Overlays' },
 ];
 
-// Fullscreen hat + overlay customisation editor.
+// Fullscreen hat + overlay customisation editor (1:1 with the original build).
 export default function CosmeticEditor({ profile, cosmeticId, onProfile, onClose }) {
   const owned = SHOP_COSMETICS.filter((i) => (profile.ownedCosmetics || []).includes(i.id));
   const [equipped, setEquipped] = useState(() => ({ hat: null, overlay: null, ...(profile.equippedCosmetics || {}) }));
@@ -34,65 +34,60 @@ export default function CosmeticEditor({ profile, cosmeticId, onProfile, onClose
   };
 
   return (
-    <div className="cosmetic-editor-overlay">
-      <CosmeticStage previewProfile={previewProfile} skinId={profile.skin} draft={draft} onDraft={patch} />
+    <div className="cosmetic-fs-editor">
+      <CosmeticStage previewProfile={previewProfile} skinId={profile.skin} draft={draft} onDraft={patch} hasItem={!!item} />
 
-      <aside className="cos-panel">
-        <header className="cos-panel-head">
+      <aside className="cosmetic-fs-panel">
+        <div className="cosmetic-fs-head">
           <div>
-            <span className="cos-kicker">Hat + Overlay Customisation</span>
+            <small>Hat + Overlay Customisation</small>
             <h2>Cosmetic Editor</h2>
           </div>
-          <button className="cos-close" onClick={onClose} aria-label="Close">✕</button>
-        </header>
+          <button onClick={onClose} aria-label="Close">✕</button>
+        </div>
 
-        <div className="cos-panel-body">
+        <div className="cosmetic-fs-list">
           {SECTIONS.map((sec) => {
             const list = owned.filter((i) => i.slot === sec.slot);
             if (!list.length) return null;
-            return (
-              <div key={sec.slot} className="cos-section">
-                <h3>{sec.title}</h3>
-                <div className="cos-card-grid">
-                  {list.map((entry) => (
-                    <button key={entry.id} type="button"
-                      className={`cos-card${selected === entry.id ? ' selected' : ''}`}
-                      onClick={() => pick(entry)}>
-                      <span className="cos-card-icon">{entry.icon}</span>
-                      <span className="cos-card-name">{entry.name}</span>
-                      {equipped[entry.slot] === entry.id && <span className="cos-card-badge">Equipped</span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
+            return [
+              <div key={`${sec.slot}-head`} className="cosmetic-fs-section-head"><b>{sec.title}</b><i /></div>,
+              ...list.map((entry) => (
+                <button key={entry.id} type="button"
+                  className={`cosmetic-fs-card${selected === entry.id ? ' active' : ''}${equipped[entry.slot] === entry.id ? ' equipped' : ''}`}
+                  onClick={() => pick(entry)}>
+                  <span className="cosmetic-icon">{entry.icon}</span>
+                  <span className="cosmetic-name">{entry.name}</span>
+                </button>
+              )),
+            ];
           })}
-          {!owned.length && <div className="cos-empty">You do not own any cosmetics yet. Buy hats and overlays in the Shop.</div>}
+          {!owned.length && <div className="cosmetics-empty">You do not own any cosmetics yet. Buy hats and overlays in the Shop.</div>}
         </div>
 
         {item && (
-          <div className="cos-controls">
-            <div className="cos-controls-head">
-              <strong>{item.name}</strong>
+          <div className="cosmetic-fs-selected">
+            <div className="cosmetic-control-head">
+              <h4>{item.name}</h4>
               <span>{item.slot === 'hat' ? 'Hat slot' : 'Overlay slot'} · {draft.layer === 'back' ? 'Behind cell' : 'In front'}</span>
             </div>
-            <div className="cos-controls-grid">
-              <button className={draft.layer === 'back' ? 'primary' : ''} onClick={() => patch({ layer: 'back' })}>Behind Cell</button>
-              <button className={draft.layer !== 'back' ? 'primary' : ''} onClick={() => patch({ layer: 'front' })}>Bring To Front</button>
+            <div className="cosmetic-layer-actions">
+              <button className={draft.layer === 'back' ? 'active' : ''} onClick={() => patch({ layer: 'back' })}>Behind Cell</button>
+              <button className={draft.layer !== 'back' ? 'active' : ''} onClick={() => patch({ layer: 'front' })}>Bring To Front</button>
               <button onClick={() => patch({ x: 0, y: 0 })}>Centre</button>
               <button onClick={() => patch({ rotation: 0 })}>Reset rotation</button>
             </div>
-            <div className="cos-controls-grid small">
-              <button onClick={() => patch({ ...defaults })}>Reset Selected</button>
-              <button className="danger" onClick={() => setEquipped((e) => ({ ...e, [item.slot]: null }))}>Unequip Slot</button>
+            <div className="cosmetic-actions">
+              <button className="cosmetic-reset" onClick={() => patch({ ...defaults })}>Reset Selected</button>
+              <button className="cosmetic-remove" onClick={() => setEquipped((e) => ({ ...e, [item.slot]: null }))}>Unequip Slot</button>
             </div>
           </div>
         )}
 
-        <footer className="cos-footer">
-          <button className="cancel" onClick={onClose}>Cancel</button>
-          <button className="save" onClick={save}>Save Hat &amp; Overlay</button>
-        </footer>
+        <div className="cosmetic-fs-footer">
+          <button className="cosmetic-fs-cancel" onClick={onClose}>Cancel</button>
+          <button className="cosmetic-fs-save" onClick={save}>Save Hat &amp; Overlay</button>
+        </div>
       </aside>
     </div>
   );
