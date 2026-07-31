@@ -23,7 +23,6 @@ export default function AccountModal({ profile, account, user, onAccount, onClos
         <div className="profile-head">
           <div style={{ minWidth: 0, width: '100%' }}>
             <h3>Sign in to save your progress</h3>
-            <p>Your coins, level, skins, cosmetics and stats will follow you on every device — then link Discord to your account.</p>
           </div>
         </div>
         <button className="primary-btn" onClick={() => base44.auth.redirectToLogin()}>Sign in</button>
