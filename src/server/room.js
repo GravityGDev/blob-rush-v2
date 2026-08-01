@@ -85,6 +85,9 @@ function broadcast(room) {
   const time = Date.now();
   for (const [playerId, ws] of room.sockets) {
     if (ws.readyState !== 1) continue;
+    // Backpressure: if the socket is still draining, skip this snapshot instead of
+    // queueing more. Otherwise slow links build a backlog and ping climbs to seconds.
+    if (ws.bufferedAmount > 64 * 1024) continue;
     const self = world.players.get(playerId);
     if (!self || !self.cells.length) continue;
     self.peakMass = Math.max(self.peakMass || 0, playerMass(self));
