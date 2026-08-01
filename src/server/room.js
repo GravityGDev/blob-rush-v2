@@ -87,7 +87,7 @@ function broadcast(room) {
     if (ws.readyState !== 1) continue;
     // Backpressure: if the socket is still draining, skip this snapshot instead of
     // queueing more. Otherwise slow links build a backlog and ping climbs to seconds.
-    if (ws.bufferedAmount > 64 * 1024) continue;
+    if (ws.bufferedAmount > 24 * 1024) continue;
     const self = world.players.get(playerId);
     if (!self || !self.cells.length) continue;
     self.peakMass = Math.max(self.peakMass || 0, playerMass(self));
@@ -112,7 +112,8 @@ function broadcast(room) {
   }
 }
 
-const round = (n) => Math.round(n * 10) / 10;
+// Whole units are plenty at render scale and cut snapshot size a lot.
+const round = (n) => Math.round(n);
 
 export function send(ws, msg) {
   if (ws.readyState === 1) ws.send(JSON.stringify(msg));

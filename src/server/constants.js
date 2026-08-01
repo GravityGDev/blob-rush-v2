@@ -13,8 +13,8 @@ export const SPAWN_PROTECTION = 5;
 export const MAX_EJECTED = 3800;
 
 export const TICK_HZ = 60;
-export const SNAPSHOT_HZ = 20;
-export const VIEW_RANGE = 4200; // interest management radius around a player
+export const SNAPSHOT_HZ = 12;
+export const VIEW_RANGE = 3200; // interest management radius around a player
 
 export const MODES = {
   ffa: { startMass: START_MASS, bots: 25, capacity: 60 },
