@@ -5,8 +5,9 @@ const LABELS = {
   connecting: { text: 'Connecting to server…', tone: 'wait' },
   joining: { text: 'Joining arena…', tone: 'wait' },
   online: { text: 'Online', tone: 'good' },
-  disconnected: { text: 'Disconnected — playing offline', tone: 'bad' },
-  error: { text: 'Server unavailable — playing offline', tone: 'bad' },
+  disconnected: { text: '⚠ Lost connection — now playing offline vs bots', tone: 'bad' },
+  error: { text: '⚠ Couldn’t reach the server — playing offline vs bots', tone: 'bad' },
+  offline: { text: '⚠ Offline mode — bots only, no real players', tone: 'bad' },
 };
 
 export default function NetStatus({ status }) {

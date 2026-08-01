@@ -22,4 +22,5 @@
 .net-status { position:fixed; left:50%; top:12px; transform:translateX(-50%); z-index:40; padding:7px 14px; border-radius:999px; font-size:12px; font-weight:900; backdrop-filter:blur(6px); pointer-events:none; }
 .net-status.wait { background:rgba(15,23,42,.85); border:1px solid rgba(125,211,252,.35); color:#7dd3fc; }
 .net-status.good { background:rgba(6,78,59,.7); border:1px solid rgba(52,211,153,.4); color:#6ee7b7; }
-.net-status.bad { background:rgba(76,5,25,.75); border:1px solid rgba(248,113,113,.4); color:#fca5a5; }
+.net-status.bad { background:rgba(127,7,32,.92); border:1px solid rgba(248,113,113,.75); color:#fecaca; font-size:13px; padding:9px 18px; box-shadow:0 8px 26px rgba(220,38,38,.35); animation:netAlert 1.8s ease-in-out infinite; }
+@keyframes netAlert { 0%,100% { box-shadow:0 8px 26px rgba(220,38,38,.35); } 50% { box-shadow:0 8px 34px rgba(220,38,38,.7); } }

@@ -12,4 +12,5 @@ export function gameServerUrl(profile) {
   return `wss://${raw}`.replace(/\/+$/, '');
 }
 
-export const isOnlineEnabled = (profile) => !!profile?.settings?.onlineEnabled && !!gameServerUrl(profile);
+// Online is the default: only an explicit opt-out falls back to local bots.
+export const isOnlineEnabled = (profile) => profile?.settings?.onlineEnabled !== false && !!gameServerUrl(profile);

@@ -41,7 +41,10 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
     if (isOnlineEnabled(profile)) {
       startOnlineSession(profile, setNetStatus)
         .then((client) => { if (client) net.client = client; })
+        .then((client) => { if (!client) setNetStatus((s) => s?.state === 'error' ? s : { state: 'error' }); })
         .catch(() => setNetStatus({ state: 'error' }));
+    } else {
+      setNetStatus({ state: 'offline' });
     }
     const session = createSession(canvasRef.current, profile, (next) => {
       setStats(next);
