@@ -37,6 +37,7 @@ export const DEFAULTS = {
   level: 1,
   shopVersion: 2,
   rewardsVersion: 1,
+  netVersion: 1,
   tokens: 0,
   seasonPass: { season: 1, points: 0, vip: false, claimedFree: [], claimedVip: [] },
   luckyStats: { wheelSpins: 0, slotSpins: 0, cardFlips: 0, jackpots: 0 },
@@ -57,7 +58,7 @@ export const DEFAULTS = {
   customSkins: [],
   room: { modeId: 'ffa', roomId: 'ffa-8080' },
   stats: { games: 0, highestMass: 0, timePlayed: 0, wins: 0, cellsEaten: 0 },
-  settings: { serverUrl: '', onlineEnabled: false, sfx: 0.8, music: 0.5, joystick: 1, quality: 'high', macroSpeed: 50, macroMultiplier: 4, cameraZoom: 100, animationDelay: 150, fixedCameraZoom: false, showFps:true, showReticle:true, showStatsBar:true, showMiniMap:true, showRecordButton:true, showCosmetics:true, showGlows:true, animateSkins:true, touch:DEFAULT_TOUCH_SETTINGS },
+  settings: { serverUrl: '', onlineEnabled: true, sfx: 0.8, music: 0.5, joystick: 1, quality: 'high', macroSpeed: 50, macroMultiplier: 4, cameraZoom: 100, animationDelay: 150, fixedCameraZoom: false, showFps:true, showReticle:true, showStatsBar:true, showMiniMap:true, showRecordButton:true, showCosmetics:true, showGlows:true, animateSkins:true, touch:DEFAULT_TOUCH_SETTINGS },
 };
 
 let memoryProfile = null;
@@ -95,6 +96,7 @@ export function mergeProfile(p) {
     ...p,
     shopVersion: 2,
     rewardsVersion: 1,
+    netVersion: 1,
     tokens: migratedTokens,
     seasonPass,
     luckyStats: { ...DEFAULTS.luckyStats, ...(p?.luckyStats || {}) },
@@ -125,6 +127,8 @@ export function mergeProfile(p) {
     settings: {
       ...DEFAULTS.settings,
       ...(p?.settings || {}),
+      // Online play is now the default; flip legacy profiles saved before that change.
+      onlineEnabled: p?.netVersion === 1 ? p?.settings?.onlineEnabled !== false : true,
       touch: {
         ...DEFAULT_TOUCH_SETTINGS,
         ...(p?.settings?.touch || {}),
