@@ -1,9 +1,7 @@
-// Where the authoritative game server lives.
-// Players can override this per-device in Choose Arena → Server connection.
-export const DEFAULT_GAME_SERVER_URL = 'wss://usually-moments-instrumentation-monitors.trycloudflare.com';
+// Public URLs injected into the frontend build by Dokploy.
+export const DEFAULT_GAME_SERVER_URL = String(import.meta.env.VITE_GAME_SERVER_URL || '').trim();
 
 export function gameServerUrl(profile) {
-  // Hard-coded for now: the built-in server always wins over any stored override.
   const raw = String(DEFAULT_GAME_SERVER_URL || profile?.settings?.serverUrl || '').trim();
   if (!raw) return '';
   if (/^wss?:\/\//i.test(raw)) return raw.replace(/\/+$/, '');
@@ -12,5 +10,4 @@ export function gameServerUrl(profile) {
   return `wss://${raw}`.replace(/\/+$/, '');
 }
 
-// Online is the default: only an explicit opt-out falls back to local bots.
 export const isOnlineEnabled = (profile) => profile?.settings?.onlineEnabled !== false && !!gameServerUrl(profile);
