@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import MainMenuScreen from '@/components/menu/MainMenuScreen';
 import SkinsModal from '@/components/menu/SkinsModal';
 import ProfileModal from '@/components/menu/ProfileModal';
@@ -17,28 +18,35 @@ import { loadProfile, saveProfile, addXp, xpForLevel } from '@/game/save';
 import { addSeasonProgress, boosterActive } from '@/game/progression';
 import { findMode, findRoom } from '@/game/rooms';
 import { fetchAccount, queueProfilePush } from '@/game/account';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Play() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { isAuthenticated } = useAuth();
   const [profile, setProfile] = useState(() => loadProfile());
   const [playing, setPlaying] = useState(false);
   const [modal, setModal] = useState(null);
   const [account, setAccount] = useState(null);
   const [user, setUser] = useState(null);
 
-  // Signed-in players load their cloud profile and keep it in sync.
   useEffect(() => {
+    if (!isAuthenticated) { setUser(null); setAccount(null); return; }
     fetchAccount().then((res) => {
       if (!res) return;
       setUser(res.user);
       setAccount(res.account);
       if (res.profile) setProfile((local) => ({ ...res.profile, customSkins: local.customSkins }));
     });
-  }, []);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (searchParams.get('account')) setModal('account');
+  }, [searchParams]);
 
   const commit = (next) => {
     setProfile(next);
     saveProfile(next);
-    queueProfilePush(account?.id, next);
+    if (isAuthenticated) queueProfilePush(account?.id, next);
   };
   const update = (patch) => commit({ ...profile, ...patch });
 
@@ -64,43 +72,39 @@ export default function Play() {
   };
 
   if (playing) {
-    return (
-      <>
-        <GameScreen profile={profile} onProfile={commit} onExit={() => setPlaying(false)} onMatchEnd={handleMatchEnd} />
-        <RotateOverlay />
-      </>
-    );
+    return <><GameScreen profile={profile} onProfile={commit} onExit={() => setPlaying(false)} onMatchEnd={handleMatchEnd} /><RotateOverlay /></>;
   }
 
   const mode = findMode(profile.room.modeId);
   const room = findRoom(profile.room.roomId);
-  const close = () => setModal(null);
+  const close = () => {
+    setModal(null);
+    if (searchParams.has('account')) { const next = new URLSearchParams(searchParams); next.delete('account'); setSearchParams(next, { replace: true }); }
+  };
+  const enterArena = () => {
+    if (!isAuthenticated) { setModal('account'); return; }
+    setPlaying(true);
+  };
 
-  return (
-    <>
-      <MainMenuScreen
-        profile={{ ...profile, xpPercent: (profile.xp / xpForLevel(profile.level)) * 100 }}
-        roomLabel={`${mode.name} · ${room.label}`}
-        roomMeta={`${room.region} · ${room.players}/${room.capacity} players`}
-        onNickname={(nickname) => update({ nickname })}
-        onPlay={() => setPlaying(true)}
-        onOpenModal={setModal}
-      />
-      {modal === 'skins' && <SkinsModal profile={profile} onEquip={(skin) => update({ skin })} onProfile={commit} onClose={close} />}
-      {modal === 'profile' && <ProfileModal profile={profile} onClose={close} />}
-      {modal === 'account' && (
-        <AccountModal profile={profile} account={account} user={user} onAccount={setAccount} onClose={close} />
-      )}
-      {modal === 'shop' && <ShopModal profile={profile} onProfile={commit} onClose={close} />}
-      {modal === 'season' && <SeasonPassModal profile={profile} onProfile={commit} onClose={close} />}
-      {modal === 'lucky' && <LuckyModal profile={profile} onProfile={commit} onClose={close} />}
-      {modal === 'settings' && <SettingsModal profile={profile} onChange={(settings) => update({ settings })} onClose={close} />}
-      {modal === 'server' && <ServerModal profile={profile} onSelect={(room2) => update({ room: room2 })} onSettings={(settings) => update({ settings })} onClose={close} />}
-      {modal === 'admin' && <AdminModal profile={profile} onProfile={commit} onClose={close} />}
-      {modal === 'moderation' && (
-        <StaffModal mode={modal} profile={profile} onProfile={commit} onClose={close} />
-      )}
-      <RotateOverlay />
-    </>
-  );
+  return <>
+    <MainMenuScreen
+      profile={{ ...profile, xpPercent: (profile.xp / xpForLevel(profile.level)) * 100 }}
+      roomLabel={`${mode.name} · ${room.label}`}
+      roomMeta={`${room.region} · ${room.players}/${room.capacity} players`}
+      onNickname={(nickname) => update({ nickname })}
+      onPlay={enterArena}
+      onOpenModal={setModal}
+    />
+    {modal === 'skins' && <SkinsModal profile={profile} onEquip={(skin) => update({ skin })} onProfile={commit} onClose={close} />}
+    {modal === 'profile' && <ProfileModal profile={profile} onClose={close} />}
+    {modal === 'account' && <AccountModal profile={profile} account={account} user={user} initialMode={searchParams.get('account') || 'login'} onAccount={setAccount} onClose={close} />}
+    {modal === 'shop' && <ShopModal profile={profile} onProfile={commit} onClose={close} />}
+    {modal === 'season' && <SeasonPassModal profile={profile} onProfile={commit} onClose={close} />}
+    {modal === 'lucky' && <LuckyModal profile={profile} onProfile={commit} onClose={close} />}
+    {modal === 'settings' && <SettingsModal profile={profile} onChange={(settings) => update({ settings })} onClose={close} />}
+    {modal === 'server' && <ServerModal profile={profile} onSelect={(room2) => update({ room: room2 })} onSettings={(settings) => update({ settings })} onClose={close} />}
+    {modal === 'admin' && account?.role === 'admin' && <AdminModal profile={profile} onProfile={commit} onClose={close} />}
+    {modal === 'moderation' && ['admin', 'moderator'].includes(account?.role) && <StaffModal mode={modal} profile={profile} onProfile={commit} onClose={close} />}
+    <RotateOverlay />
+  </>;
 }
