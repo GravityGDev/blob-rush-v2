@@ -10,7 +10,7 @@ const ROLE_LABEL = { admin: '🛡️ Admin', moderator: '🔨 Moderator', vip: '
 export default function AccountModal({ profile, account, user, initialMode = 'login', onAuthenticated, onClose }) {
   const { isAuthenticated, login, register, logout } = useAuth();
   const [mode, setMode] = useState(initialMode === 'register' ? 'register' : 'login');
-  const [form, setForm] = useState({ displayName: '', email: '', password: '', confirm: '' });
+  const [form, setForm] = useState({ email: '', password: '', confirm: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   useEffect(() => setMode(initialMode === 'register' ? 'register' : 'login'), [initialMode]);
@@ -23,7 +23,7 @@ export default function AccountModal({ profile, account, user, initialMode = 'lo
       setLoading(true);
       try {
         if (mode === 'login') await login(form.email, form.password);
-        else await register(form.email, form.password, form.displayName);
+        else await register(form.email, form.password);
         onAuthenticated?.(); onClose();
       } catch (err) { setError(err.message || 'Authentication failed.'); }
       finally { setLoading(false); }
@@ -34,10 +34,9 @@ export default function AccountModal({ profile, account, user, initialMode = 'lo
       <div className="account-auth-tabs"><button className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log In</button><button className={mode === 'register' ? 'active' : ''} onClick={() => switchMode('register')}>Register</button></div>
       {error && <div className="account-auth-error">{error}</div>}
       <form className="account-auth-form" onSubmit={submit}>
-        {mode === 'register' && <label><span>Display name</span><input maxLength="24" autoComplete="nickname" value={form.displayName} onChange={change('displayName')} placeholder="Your blob name" required /></label>}
         <label><span>Email</span><input type="email" autoComplete="email" value={form.email} onChange={change('email')} placeholder="you@example.com" required /></label>
         <label><span>Password</span><input type="password" minLength="10" maxLength="128" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={form.password} onChange={change('password')} placeholder={mode === 'register' ? 'At least 10 characters' : 'Your password'} required /></label>
-        {mode === 'register' && <label><span>Confirm password</span><input type="password" minLength="10" maxLength="128" autoComplete="new-password" value={form.confirm} onChange={change('confirm')} placeholder="Type it again" required /></label>}
+        {mode === 'register' && <label><span>Repeat password</span><input type="password" minLength="10" maxLength="128" autoComplete="new-password" value={form.confirm} onChange={change('confirm')} placeholder="Type it again" required /></label>}
         <button className="account-auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait…' : mode === 'login' ? 'Enter Blob Rush' : 'Create Account'}</button>
       </form>
       <p className="account-auth-switch">{mode === 'login' ? "Don't have an account?" : 'Already have an account?'} <button onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}>{mode === 'login' ? 'Register' : 'Log in'}</button></p>
