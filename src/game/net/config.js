@@ -10,4 +10,5 @@ export function gameServerUrl(profile) {
   return `wss://${raw}`.replace(/\/+$/, '');
 }
 
-export const isOnlineEnabled = (profile) => profile?.settings?.onlineEnabled !== false && !!gameServerUrl(profile);
+// The master server now selects the live game server and returns its WebSocket URL.
+export const isOnlineEnabled = (profile) => profile?.settings?.onlineEnabled !== false;
