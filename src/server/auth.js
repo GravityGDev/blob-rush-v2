@@ -99,4 +99,19 @@ export async function handleAuth(req, res, pathname) {
   return false;
 }
 
+export async function handleAccount(req, res, pathname) {
+  const user = await currentUser(req);
+  if (!user) return send(res, 401, { error: 'Not signed in.' });
+  if (pathname === '/api/account' && req.method === 'GET') {
+    return send(res, 200, { user: publicUser(user), profile: user.profile || {} });
+  }
+  if (pathname === '/api/account/profile' && req.method === 'PUT') {
+    const { profile } = await readJson(req, 256 * 1024);
+    if (!profile || typeof profile !== 'object' || Array.isArray(profile)) return send(res, 400, { error: 'Invalid profile.' });
+    await db().collection('users').updateOne({ _id: user._id }, { $set: { profile, updatedAt: new Date() } });
+    return send(res, 200, { ok: true });
+  }
+  return send(res, 404, { error: 'Not found.' });
+}
+
 export { publicUser };

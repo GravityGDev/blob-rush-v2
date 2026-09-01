@@ -1,25 +1,20 @@
-// Cloud account: Base44 login + Discord linking + profile sync.
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/authClient';
 import { mergeProfile } from './save';
 
-export const DISCORD_CONNECTOR_ID = '6a600e70ee3817672e5197ce';
-
-// Custom skins hold base64 image data, far too large for entity fields — keep them local only.
 const forCloud = (profile) => {
   const { customSkins, ...rest } = profile;
   return rest;
 };
 
 export async function fetchAccount() {
-  if (!(await base44.auth.isAuthenticated())) return null;
-  const user = await base44.auth.me();
-  const rows = await base44.entities.PlayerAccount.filter({ created_by_id: user.id });
-  const account = rows[0] || (await base44.entities.PlayerAccount.create({
-    role: user.role === 'admin' ? 'admin' : 'player',
-    data: {},
-  }));
-  const saved = account.data && Object.keys(account.data).length ? account.data : null;
-  return { user, account, profile: saved ? mergeProfile(saved) : null };
+  try {
+    const { user, profile } = await api('/api/account');
+    return {
+      user: { id: user.id, email: user.email, full_name: user.displayName },
+      account: { id: user.id, role: user.role },
+      profile: profile && Object.keys(profile).length ? mergeProfile(profile) : null,
+    };
+  } catch { return null; }
 }
 
 let pushTimer = null;
@@ -27,30 +22,9 @@ export function queueProfilePush(accountId, profile) {
   if (!accountId) return;
   clearTimeout(pushTimer);
   pushTimer = setTimeout(() => {
-    base44.entities.PlayerAccount.update(accountId, { data: forCloud(profile) });
+    api('/api/account/profile', { method: 'PUT', body: JSON.stringify({ profile: forCloud(profile) }) }).catch(() => {});
   }, 900);
 }
 
-export async function linkDiscord(accountId) {
-  const url = await base44.connectors.connectAppUser(DISCORD_CONNECTOR_ID);
-  const popup = window.open(url, '_blank');
-  await new Promise((resolve) => {
-    const timer = setInterval(() => {
-      if (!popup || popup.closed) { clearInterval(timer); resolve(); }
-    }, 500);
-  });
-  const { data } = await base44.functions.invoke('discordProfile', {});
-  if (!data?.id) throw new Error(data?.error || 'Discord link failed');
-  return base44.entities.PlayerAccount.update(accountId, {
-    discord_id: data.id,
-    discord_username: data.username,
-    discord_avatar: data.avatar,
-  });
-}
-
-export async function unlinkDiscord(accountId) {
-  await base44.connectors.disconnectAppUser(DISCORD_CONNECTOR_ID);
-  return base44.entities.PlayerAccount.update(accountId, {
-    discord_id: '', discord_username: '', discord_avatar: '',
-  });
-}
+export async function linkDiscord() { throw new Error('Discord linking will be added to the new account system next.'); }
+export async function unlinkDiscord() { throw new Error('Discord linking is not configured yet.'); }

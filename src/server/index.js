@@ -3,7 +3,7 @@ import process from 'node:process';
 import crypto from 'node:crypto';
 import { WebSocketServer } from 'ws';
 import { connectDatabase, closeDatabase } from './db.js';
-import { currentUser, handleAuth, readJson } from './auth.js';
+import { currentUser, handleAccount, handleAuth, readJson } from './auth.js';
 import { verifyTicket } from './ticket.js';
 import { createRoom, join, leave, handleMessage, send } from './room.js';
 import { TICK_HZ, WORLD_SIZE } from './constants.js';
@@ -42,6 +42,7 @@ const server = http.createServer(async (req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
   try {
     if (pathname.startsWith('/api/auth/')) { await handleAuth(req, res, pathname); return; }
+    if (pathname === '/api/account' || pathname === '/api/account/profile') { await handleAccount(req, res, pathname); return; }
     if (pathname === '/api/game/ticket' && req.method === 'POST') {
       const user = await currentUser(req);
       if (!user) { res.writeHead(401, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Not signed in.' })); return; }
