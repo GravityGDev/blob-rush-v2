@@ -12,8 +12,12 @@ export function createWorldSync() {
   const buffer = [];
   let clockOffset = null;   // performance.now() - server time
   let selfId = null;
+  let selfJoinedAt = null;
 
-  const setSelfId = (id) => { selfId = id; };
+  const setSelfId = (id) => {
+    if (id !== selfId) selfJoinedAt = performance.now();
+    selfId = id;
+  };
 
   function push(snapshot) {
     if (!snapshot || typeof snapshot.time !== 'number') return;
@@ -60,7 +64,7 @@ export function createWorldSync() {
     target.cells = next;
   }
 
-  function syncPlayer(target, snapA, snapB, t) {
+  function syncPlayer(target, snapA, snapB, t, isSelf = false) {
     target.name = snapA.name ?? target.name;
     target.skin = snapA.skin ?? target.skin;
     target.kills = snapA.kills || 0;
@@ -69,7 +73,25 @@ export function createWorldSync() {
     if (snapA.badge !== undefined) target.equippedBadge = snapA.badge;
     if (snapA.emoji) target.activeEmoji = snapA.emoji;
     if (snapA.emote) target.activeEmote = snapA.emote;
-    target.spawnProtection = snapA.protected ? 1 : 0;
+
+    const protectionA = Number(snapA.spawnProtection);
+    const protectionB = Number(snapB?.spawnProtection);
+    target.spawnProtection = Number.isFinite(protectionA)
+      ? (Number.isFinite(protectionB) ? lerp(protectionA, protectionB, t) : protectionA)
+      : (snapA.protected ? 1 : 0);
+
+    const elapsedA = Number(snapA.spawnElapsed);
+    const elapsedB = Number(snapB?.spawnElapsed);
+    if (Number.isFinite(elapsedA)) {
+      const elapsed = Number.isFinite(elapsedB) ? lerp(elapsedA, elapsedB, t) : elapsedA;
+      target.spawnElapsed = Math.max(Number(target.spawnElapsed) || 0, elapsed);
+    } else if (isSelf) {
+      // Compatibility with an older game server during a rolling deploy. The
+      // online loop does not run local physics, so it must still advance the
+      // one-shot spawn animation instead of leaving the cell flattened forever.
+      if (selfJoinedAt === null) selfJoinedAt = performance.now();
+      target.spawnElapsed = Math.max(0, (performance.now() - selfJoinedAt) / 1000);
+    }
     syncCells(target, snapA.cells, snapB?.cells, t);
   }
 
@@ -91,7 +113,7 @@ export function createWorldSync() {
         target.cells = [];
       }
       target.netId = snapA.id;
-      syncPlayer(target, snapA, snapB, t);
+      syncPlayer(target, snapA, snapB, t, isSelf);
       players.push(target);
     }
     world.players = players;
