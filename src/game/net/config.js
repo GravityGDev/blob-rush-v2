@@ -10,5 +10,7 @@ export function gameServerUrl(profile) {
   return `wss://${raw}`.replace(/\/+$/, '');
 }
 
-// The master server now selects the live game server and returns its WebSocket URL.
-export const isOnlineEnabled = (profile) => profile?.settings?.onlineEnabled !== false;
+// Public matchmaking is online-only. This intentionally ignores the legacy
+// per-device offline toggle so old localStorage cannot strand players in a
+// separate bot world after they select a live server.
+export const isOnlineEnabled = () => true;

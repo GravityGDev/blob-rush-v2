@@ -36,13 +36,16 @@ export default function GameScreen({ profile, onProfile, onExit, onMatchEnd }) {
   useEffect(() => {
     state.stats = { maxMass: 0, lastMass: 0, bestRank: 99 };
     startedAt.current = Date.now();
-    const net = createNetHolder();
+    const onlineRequired = isOnlineEnabled(profile);
+    const net = createNetHolder({ required: onlineRequired });
     netRef.current = net;
-    if (isOnlineEnabled(profile)) {
+    if (onlineRequired) {
       startOnlineSession(profile, setNetStatus)
-        .then((client) => { if (client) net.client = client; })
-        .then((client) => { if (!client) setNetStatus((s) => s?.state === 'error' ? s : { state: 'error' }); })
-        .catch(() => setNetStatus({ state: 'error' }));
+        .then((client) => {
+          if (!client) throw new Error('No online game server was returned by the master server.');
+          net.client = client;
+        })
+        .catch((error) => setNetStatus({ state: 'error', message: error?.message || 'Could not join the online server.' }));
     } else {
       setNetStatus({ state: 'offline' });
     }

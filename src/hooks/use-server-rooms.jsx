@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/api/authClient';
 
-export default function useServerRooms(_profile, intervalMs = 5000) {
+export default function useServerRooms(_profile, intervalMs = 3000) {
   const [state, setState] = useState({ status: 'loading', rooms: [], checkedAt: null });
 
   useEffect(() => {

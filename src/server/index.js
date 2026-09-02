@@ -53,14 +53,20 @@ wss.on('connection', (ws) => {
       player = join(room, ws, payload, { ...msg, name: payload.name, badge: null, cosmetics: null });
       if (!player) { send(ws, { t: 'error', message: 'Room is full.' }); ws.close(); return; }
       send(ws, { t: 'joined', playerId: player.id, tickRate: TICK_HZ, world: { size: WORLD_SIZE } });
+      heartbeat();
       return;
     }
     if (player) handleMessage(room, player, msg);
   });
-  ws.on('close', () => { if (player) leave(room, player.id); });
+  ws.on('close', () => {
+    if (player) { leave(room, player.id); heartbeat(); }
+  });
 });
 
+let heartbeatInFlight = false;
 async function heartbeat() {
+  if (heartbeatInFlight) return;
+  heartbeatInFlight = true;
   try {
     const response = await fetch(`${MASTER_URL}/internal/servers/heartbeat`, {
       method: 'POST',
@@ -70,6 +76,7 @@ async function heartbeat() {
     });
     if (!response.ok) console.error(`Master heartbeat rejected: ${response.status}`);
   } catch (error) { console.error(`Master heartbeat failed: ${error.message}`); }
+  finally { heartbeatInFlight = false; }
 }
 
 setInterval(() => {
@@ -77,6 +84,6 @@ setInterval(() => {
   for (const [nonce, exp] of usedTickets) if (exp < now) usedTickets.delete(nonce);
   for (const ws of wss.clients) { if (!ws.isAlive) ws.terminate(); else { ws.isAlive = false; ws.ping(); } }
 }, 30000);
-setInterval(heartbeat, 10000);
+setInterval(heartbeat, 3000);
 
 server.listen(PORT, () => { console.log(`Blob Rush FFA game server listening on :${PORT}`); heartbeat(); });

@@ -13,6 +13,7 @@ if (!TICKET_SECRET || !INTERNAL_SECRET || !process.env.SESSION_SECRET) {
 }
 
 function json(res, status, data) {
+  res.setHeader('Cache-Control', 'no-store');
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
 }
@@ -64,7 +65,7 @@ const server = http.createServer(async (req, res) => {
         modeId: String(body.modeId || 'ffa').slice(0, 32), wsUrl,
         label: String(body.label || '#8080').slice(0, 32), region: String(body.region || 'EU West').slice(0, 32),
         players: Math.max(0, Number(body.players) || 0), capacity: Math.max(1, Number(body.capacity) || 60),
-        updatedAt: new Date(), expiresAt: new Date(Date.now() + 35000),
+        updatedAt: new Date(), expiresAt: new Date(Date.now() + 15000),
       };
       await db().collection('game_servers').updateOne({ serverId }, { $set: document }, { upsert: true });
       return json(res, 200, { ok: true });
@@ -81,9 +82,6 @@ const server = http.createServer(async (req, res) => {
       const body = await readJson(req);
       const requestedRoom = String(body.room || 'ffa-8080');
       let gameServer = await db().collection('game_servers').findOne({ roomId: requestedRoom, expiresAt: { $gt: new Date() }, $expr: { $lt: ['$players', '$capacity'] } }, { sort: { players: 1 } });
-      if (!gameServer && process.env.FFA_SERVER_URL && requestedRoom === 'ffa-8080') {
-        gameServer = { serverId: 'game-1', roomId: 'ffa-8080', wsUrl: process.env.FFA_SERVER_URL };
-      }
       if (!gameServer) return json(res, 503, { error: 'No available game server.' });
       return json(res, 200, { ticket: mintTicket(user, gameServer), serverUrl: gameServer.wsUrl, room: gameServer.roomId });
     }

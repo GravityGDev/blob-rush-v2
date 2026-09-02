@@ -9,6 +9,7 @@ export function connectToServer({ url, room, mode, profile, ticket, onStatus, on
   const sync = createWorldSync();
   const socket = new WebSocket(url);
   let connected = false;
+  let failed = false;
   let closed = false;
   let selfId = null;
   let ping = 0;
@@ -19,10 +20,15 @@ export function connectToServer({ url, room, mode, profile, ticket, onStatus, on
   let bandwidth = 0;
 
   const status = (state, message) => onStatus?.({ state, message });
-  const send = (msg) => { if (connected && socket.readyState === 1) socket.send(JSON.stringify(msg)); };
+  const send = (msg) => { if (socket.readyState === 1) socket.send(JSON.stringify(msg)); };
+  const connectionTimer = setTimeout(() => {
+    if (connected || closed) return;
+    failed = true;
+    status('error', 'The game server did not accept the connection in time.');
+    try { socket.close(); } catch { /* already closed */ }
+  }, 12000);
 
   socket.onopen = () => {
-    connected = true;
     status('joining');
     send({
       t: 'join',
@@ -49,6 +55,8 @@ export function connectToServer({ url, room, mode, profile, ticket, onStatus, on
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
     if (msg.t === 'joined') {
+      connected = true;
+      clearTimeout(connectionTimer);
       selfId = msg.playerId;
       sync.setSelfId(msg.playerId);
       status('online');
@@ -59,15 +67,25 @@ export function connectToServer({ url, room, mode, profile, ticket, onStatus, on
     } else if (msg.t === 'dead') {
       onDeath?.(msg);
     } else if (msg.t === 'error') {
+      failed = true;
+      clearTimeout(connectionTimer);
       status('error', msg.message || 'Server rejected the connection.');
+      try { socket.close(); } catch { /* already closed */ }
     }
   };
 
-  socket.onerror = () => { if (!closed) status('error', 'Could not reach the game server.'); };
+  socket.onerror = () => {
+    if (!closed) {
+      failed = true;
+      clearTimeout(connectionTimer);
+      status('error', 'Could not reach the game server WebSocket.');
+    }
+  };
   socket.onclose = () => {
     connected = false;
+    clearTimeout(connectionTimer);
     clearInterval(pingTimer);
-    if (!closed) status('disconnected', 'Connection to the game server was lost.');
+    if (!closed && !failed) status('disconnected', 'Connection to the game server was lost.');
   };
 
   return {
@@ -88,6 +106,7 @@ export function connectToServer({ url, room, mode, profile, ticket, onStatus, on
     emote(id) { send({ t: 'emote', id }); },
     close() {
       closed = true;
+      clearTimeout(connectionTimer);
       clearInterval(pingTimer);
       try { socket.close(); } catch { /* already closed */ }
     },

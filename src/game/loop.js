@@ -22,6 +22,14 @@ export function createSession(canvas, profile, onStats, net = null) {
   });
   const cam = createCamera();
   const player = world.player;
+  // Online sessions must never silently continue in a separate local bot world.
+  // Keep a minimal waiting scene until the authoritative server sends snapshots.
+  if (net?.required) {
+    world.players = [player];
+    world.pellets = [];
+    world.viruses = [];
+    world.ejected = [];
+  }
   const centre = player.cells[0];
   cam.x = centre.x;
   cam.y = centre.y;
@@ -68,6 +76,7 @@ export function createSession(canvas, profile, onStats, net = null) {
   function doSplit() {
     if (dead || !player.cells.length) return;
     if (online()) { net.split(1); playSfx('split'); return; }
+    if (net?.required) return;
     if (splitPlayer(player)) playSfx('split');
   }
   const animationDelayMs = () => Math.max(50, Math.min(500, Number(settings().animationDelay || 150)));
@@ -93,6 +102,7 @@ export function createSession(canvas, profile, onStats, net = null) {
       if (withSound) playSfx('eject');
       return true;
     }
+    if (net?.required) return false;
     const did = !!(!dead && player.cells.length && ejectMassBurst(world, player, pulses));
     if (did && withSound) playSfx('eject');
     return did;
@@ -162,7 +172,7 @@ export function createSession(canvas, profile, onStats, net = null) {
       if (online()) {
         net.sendInput(input);
         net.sync.apply(world, player);
-      } else {
+      } else if (!net?.required) {
         updateWorld(world, dt * Math.max(0.15, Number(world.modTimeScale || 1)), playSfx);
       }
       updateCamera(cam, player, dt, state.size.w, state.size.h);
@@ -223,8 +233,8 @@ export function createSession(canvas, profile, onStats, net = null) {
         selfName: player.name,
         alive: player.cells.length > 0,
         playerPos: player.cells[0] ? { x: player.cells[0].x, y: player.cells[0].y } : null,
-        ping: online() ? net.ping : Math.round(20 + Math.sin(now / 1300) * 3 + Math.random() * 2),
-        bandwidth: online() ? Math.max(1, net.bandwidth) : Math.max(1, Math.round(1 + entities * 0.055)),
+        ping: online() ? net.ping : net?.required ? 0 : Math.round(20 + Math.sin(now / 1300) * 3 + Math.random() * 2),
+        bandwidth: online() ? Math.max(1, net.bandwidth) : net?.required ? 0 : Math.max(1, Math.round(1 + entities * 0.055)),
         fps,
       });
     }

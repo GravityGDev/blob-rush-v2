@@ -48,7 +48,7 @@ export default function ServerModal({ profile, onSelect, onClose }) {
             const percent = Math.min(100, (Number(room.players || 0) / Math.max(1, Number(room.capacity || 1))) * 100);
             return <button key={room.serverId || room.roomId} className={`connect-server-card${selected ? ' selected' : ''}`} disabled={full} onClick={() => { onSelect({ modeId: room.modeId, roomId: room.roomId }); onClose(); }}>
               <div className="connect-server-top"><b>{modes.find((mode) => mode.id === room.modeId)?.name || room.modeId}</b><span className={full ? 'full' : 'open'}>{full ? 'FULL' : 'OPEN'}</span></div>
-              <div className="connect-server-meta"><small>{room.players}/{room.capacity} players · {room.region}</small><em>Arena code: {String(room.label || room.roomId).replace(/^#/, '')}</em></div>
+              <div className="connect-server-meta"><small>{room.players}/{room.capacity} real players · {room.region}</small><em>Arena code: {String(room.label || room.roomId).replace(/^#/, '')}</em></div>
               <div className="connect-server-bar"><i style={{ width: `${percent}%` }} /></div>
               {selected && <strong>✓ Selected</strong>}
             </button>;

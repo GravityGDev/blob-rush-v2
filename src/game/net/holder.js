@@ -1,7 +1,8 @@
 // Lets the game loop start instantly while the server connection is still opening.
 // The loop talks to this stable object; it forwards to the socket once it exists.
-export function createNetHolder() {
+export function createNetHolder({ required = false } = {}) {
   return {
+    required,
     client: null,
     get connected() { return !!this.client?.connected; },
     get ping() { return this.client?.ping || 0; },
