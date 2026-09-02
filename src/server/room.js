@@ -102,6 +102,8 @@ function broadcast(room) {
         .map((p) => ({
           id: p.id, name: p.name, skin: p.skin, badge: p.badge || null,
           isBot: p.isBot, kills: p.kills, protected: p.protectedUntil > world.time,
+          spawnElapsed: Math.max(0, world.time - (p.spawnedAt || 0)),
+          spawnProtection: Math.max(0, (p.protectedUntil || 0) - world.time),
           cosmetics: p.cosmetics || null,
           cells: p.cells.map((c) => ({ id: c.id, x: round(c.x), y: round(c.y), mass: round(c.mass) })),
         })),
